@@ -1649,27 +1649,11 @@
     'Env', 'I+M', 'Fin', 'Del'
   ];
 
-  // Location colors — 10 visually distinct hues, all complementary-leaning
-  // to brand orange (16°) and avoiding the status palette zones (red/amber/green).
-  // Greater separation than the cool gradient — viewers can decode color→
-  // location at a glance even with adjacent rows.
-  const LOCATION_COLORS = {
-    'Fort Bliss': '#EC4899',  // pink/magenta — westernmost (-106°)
-    'Austin':     '#06B6D4',  // cyan
-    'Waco':       '#84CC16',  // lime
-    'Dallas':     '#3B82F6',  // royal blue
-    'Ames':       '#C026D3',  // plum  (NEW for ISU Fema)
-    'Peoria':     '#10B981',  // emerald (NEW for CAT Bldg)
-    'Memphis':    '#7C3AED',  // deep purple (NEW for Convergence)
-    'Miami':      '#A78BFA',  // lavender
-    'Wilmington': '#FB7185'   // coral — easternmost (-78°)
-  };
-  const LOCATION_FALLBACK = '#94A3B8';
-  window.__locationColors = LOCATION_COLORS;
-  window.__locationFallback = LOCATION_FALLBACK;
+  // Locations are shown via brand-orange chips, pips, and bezier tethers —
+  // no per-location color encoding. See icon-brand.md §1 (single accent).
 
   const swimProjects = [
-    { name: 'Disney',          phases: [100, 100, 100, 100, 100, 100,  60,   0,   0,   0,   0,   0], location: 'Orlando' },
+    { name: 'Disney',          phases: [100, 100, 100, 100, 100, 100,  60,   0,   0,   0,   0,   0], location: 'Ft Lauderdale' },
     { name: 'Waco Surf',       phases: [100,  20,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Waco' },
     { name: 'Convergence',     phases: [100, 100,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Memphis' },
     { name: 'CAT Bldg',        phases: [100, 100,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Peoria' },
@@ -2023,6 +2007,7 @@
     [32.7767,  -96.7970, 'Dallas, TX'],
     [31.5493, -106.4424, 'Fort Bliss, TX'],
     [25.7617,  -80.1918, 'Miami, FL'],
+    [26.1224,  -80.1373, 'Ft Lauderdale, FL'],
     [34.2257,  -77.9447, 'Wilmington, NC'],
     [35.1495,  -90.0490, 'Memphis, TN'],
     [40.6936,  -89.5890, 'Peoria, IL'],
