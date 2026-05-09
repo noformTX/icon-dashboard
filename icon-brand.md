@@ -152,7 +152,7 @@ When status text and dots co-exist, color them together via shared `--status-on/
 Standard spacing scale: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128px. Compose layouts on multiples of 8 unless tight type setting requires 4. Avoid 10/14/18/22 — they're invisible on inspection but compound into off-grid drift.
 
 Page grids:
-- Letter: 12-col, 32px gutters at 1632×2112 (@2x).
+- Letter: 8 cols × 10 rows, 32px margin, 16px gutters, stretch, at 612×792 (1632×2112 @2x). Default Figma layout grid for all letter-format documents — overlay renders as FF0000 @ 10% (non-printing).
 - Slides: 12-col, 24px gutters at 1920×1080.
 - Dashboard: free-form panel grid at 1920×1080. The dashboard is a fixed 80px header / sliding viewport / 80px ticker stack; panels sit inside the viewport in CSS grid.
 
