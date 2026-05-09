@@ -458,23 +458,31 @@
     transform: translateY(0);
   }
   .phase-chip.complete {
-    background: var(--accent);
-    color: var(--g10);
-    border: 1px solid var(--accent);
+    background: var(--g20);
+    color: var(--g60);
+    border: 1px solid var(--g20);
   }
   .phase-chip.pending {
     background: transparent;
     color: var(--text-subtle);
     border: 1px solid var(--rule-interior);
   }
+  /* Leading phase = the current edge of progress. Color shifts to
+     status-green per brand §4 to read as "active/on track" rather
+     than just another completed step. */
+  .phase-chip.leading {
+    background: var(--status-on);
+    color: var(--g10);
+    border-color: var(--status-on);
+  }
   .project-detail.fill-active .phase-chip.leading {
     animation: phase-leading-pulse 2.4s ease-out infinite;
     animation-delay: calc(var(--d, 0s) + 600ms);
   }
   @keyframes phase-leading-pulse {
-    0%   { box-shadow: 0 0 0 0   rgba(255, 79, 0, 0.55); }
-    70%  { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0); }
-    100% { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0); }
+    0%   { box-shadow: 0 0 0 0   rgba(74, 222, 128, 0.55); }
+    70%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
   }
   /* §6.1 — display, §6.3 SemiBold default, §6.4 -0.01em tracking
      for the 88-128px range. Sized to 120px so it reads as a metric
@@ -738,14 +746,13 @@
     max-width: 180px;
     text-align: left;
     align-items: flex-start;
-    transform: translateX(-50%);
+    transform: translateX(0);
     opacity: 0;
     transition: opacity 480ms ease;
   }
   .timeline-section.fill-active .timeline-stack { opacity: 1; }
-  .timeline-stack[data-edge="start"] {
-    transform: translateX(0);
-  }
+  /* Last milestone (Feb 2026) sits at pos:100% — anchor its text
+     to the right edge so it doesn't overflow the chart. */
   .timeline-stack[data-edge="end"] {
     transform: translateX(-100%);
   }
@@ -2048,7 +2055,7 @@
     { date: 'Aug 2025', label: 'Detail Tracker',       cap: 'Print Path & Detail Tracker live',        version: 'v1.5', pos: 33.33, y: 32 },
     { date: 'Oct 2025', label: 'Shop Drawings v2.1',   cap: 'Print Path Shops issued',                 version: 'v2.1', pos: 50,    y: 50 },
     { date: 'Dec 2025', label: 'Print Path v3.0',      cap: 'Approved for procurement · BOM issued',   version: 'v3.0', pos: 66.67, y: 68 },
-    { date: 'Jan 2026', label: 'Print Path v3.9',      cap: 'Final review prior to nozzle',            version: 'v3.9', pos: 83.33, y: 80 },
+    { date: 'Jan 2026', label: 'Print Path v3.9',      cap: 'Final review prior<br>to nozzle',         version: 'v3.9', pos: 83.33, y: 80 },
     { date: 'Feb 2026', label: 'Open Nozzle',          cap: 'Print phase complete',                    version: 'v4.0', pos: 100,   y: 88, terminal: true }
   ];
 
@@ -2168,7 +2175,6 @@
              data-edge="${edge}"
              style="left: ${m.pos}%; transition-delay: ${delay}ms;">
           <div class="timeline-date">${m.date}</div>
-          <div class="timeline-label">${m.label}</div>
           <div class="timeline-cap">${m.cap}</div>
         </div>
       `;
