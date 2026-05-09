@@ -410,20 +410,29 @@
   body:not(.dark) .d-main--split .globe-stage {
     --grid-color: rgba(0, 0, 0, 0.06);
   }
-  /* Subtle grid pattern behind the globe — fades toward center so the globe
-     reads as the focal element, not competing with the grid. */
-  .d-main--split .globe-stage::before {
-    content: '';
+  /* Starfield behind the globe — area outside the planet reads as space.
+     Stars fade near center via radial mask so the globe stays the focal
+     element. Hidden in day mode (no stars in a bright sky). */
+  .d-main--split .globe-stage .starfield {
     position: absolute;
     inset: 0;
-    background-image:
-      linear-gradient(to right,  var(--grid-color) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
-    background-size: 32px 32px;
-    -webkit-mask-image: radial-gradient(ellipse at center, transparent 28%, #000 78%);
-            mask-image: radial-gradient(ellipse at center, transparent 28%, #000 78%);
     pointer-events: none;
     z-index: 0;
+    -webkit-mask-image: radial-gradient(ellipse at center, transparent 32%, #000 78%);
+            mask-image: radial-gradient(ellipse at center, transparent 32%, #000 78%);
+  }
+  .d-main--split .globe-stage .star {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, var(--a, 0.6));
+    width: var(--s, 1px);
+    height: var(--s, 1px);
+    top: var(--y);
+    left: var(--x);
+    transform: translate(-50%, -50%);
+  }
+  [data-theme="day"] .d-main--split .globe-stage .starfield {
+    display: none;
   }
   .d-main--split .globe-stage canvas {
     position: absolute;
@@ -2038,11 +2047,32 @@
       el.className = 'chip';
       el.dataset.chipIdx = idx;
       el.dataset.side = side;
-      el.innerHTML = '<span class="pip"></span>' + site[2];
+      el.innerHTML = site[2];
       container.appendChild(el);
     }
     leftCol.forEach (entry => appendChip(left,  'left',  entry));
     rightCol.forEach(entry => appendChip(right, 'right', entry));
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  // Starfield — minimal night sky behind the globe. Sizes weighted toward
+  // small with occasional larger stars; opacity varies for depth.
+  document.querySelectorAll('.globe-stage').forEach(stage => {
+    const field = document.createElement('div');
+    field.className = 'starfield';
+    const N = 110;
+    for (let i = 0; i < N; i++) {
+      const star = document.createElement('span');
+      star.className = 'star';
+      const r = Math.random();
+      const size = r < 0.72 ? 1 : r < 0.93 ? 2 : 3;
+      star.style.setProperty('--s', size + 'px');
+      star.style.setProperty('--x', (Math.random() * 100).toFixed(2) + '%');
+      star.style.setProperty('--y', (Math.random() * 100).toFixed(2) + '%');
+      star.style.setProperty('--a', (0.25 + Math.random() * 0.65).toFixed(2));
+      field.appendChild(star);
+    }
+    stage.insertBefore(field, stage.firstChild);
   });
 
   // ────────────────────────────────────────────────────────────────
