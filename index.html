@@ -329,17 +329,16 @@
     position: relative;
   }
   .pages-track {
-    width: 200%;
+    width: 300%;
     height: 100%;
     display: flex;
     transform: translateX(0);
     transition: transform 900ms cubic-bezier(0.65, 0, 0.35, 1);
   }
-  .pages-track.page-1 {
-    transform: translateX(-50%);
-  }
+  .pages-track.page-1 { transform: translateX(-33.3333%); }
+  .pages-track.page-2 { transform: translateX(-66.6667%); }
   .page {
-    width: 50%;
+    width: 33.3333%;
     flex-shrink: 0;
     height: 100%;
   }
@@ -360,6 +359,419 @@
   .d-main--split {
     grid-template-columns: 60fr 40fr;
     grid-template-rows: 1fr;
+  }
+
+  /* ============================================
+     PAGE 3 — PROJECT DETAIL (DFW Material Testing Lab)
+     Three panels per §7.1: Project Detail (hero numeral) and Project
+     Info (title + body + stat callouts) split the top row 50/50;
+     Speed-to-Print timeline panel spans the full bottom row.
+     Timeline uses §6.10 live-register motion: comet-tail gradient
+     fills on entry, milestones cascade in, terminal node pulses
+     (matches the Austin/Miami radar bloop vocabulary).
+     ============================================ */
+  .d-main--project {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .cell.project-detail  { grid-column: 1; grid-row: 1; }
+  .cell.project-info    { grid-column: 2; grid-row: 1; }
+  .cell.project-timeline-cell { grid-column: 1 / span 2; grid-row: 2; }
+
+  /* ── Project Detail panel — speed-to-print metric on the left,
+     phase chips showing build progression on the right. The whole
+     group is centered horizontally inside the panel. ── */
+  .project-hero-num {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    min-height: 0;
+  }
+  .hero-num-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  /* Phase progression — grouped into Design / Build / Finish rows.
+     Container is content-sized so the parent can center it. */
+  .phase-chips {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .phase-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .phase-group-label {
+    flex-shrink: 0;
+    width: 60px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    text-align: right;
+  }
+  body:not(.dark) .phase-group-label { font-weight: 500; }
+  .phase-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Phase chip — own vocabulary distinct from the globe pill chips.
+     `.complete` = solid accent fill (filled like §6.9 status-on);
+     `.pending` = outlined and muted so unfinished phases recede.
+     `.leading` = the most-recent completed phase, which pulses to
+     mark the current edge of progress (radar-bloop vocabulary). */
+  .phase-chip {
+    position: relative;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+    /* Entrance cascade — stagger driven by inline `--d` per chip. */
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 380ms ease var(--d, 0s),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s);
+  }
+  body:not(.dark) .phase-chip { font-weight: 500; }
+  .project-detail.fill-active .phase-chip {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .phase-chip.complete {
+    background: var(--accent);
+    color: var(--g10);
+    border: 1px solid var(--accent);
+  }
+  .phase-chip.pending {
+    background: transparent;
+    color: var(--text-subtle);
+    border: 1px solid var(--rule-interior);
+  }
+  .project-detail.fill-active .phase-chip.leading {
+    animation: phase-leading-pulse 2.4s ease-out infinite;
+    animation-delay: calc(var(--d, 0s) + 600ms);
+  }
+  @keyframes phase-leading-pulse {
+    0%   { box-shadow: 0 0 0 0   rgba(255, 79, 0, 0.55); }
+    70%  { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0); }
+    100% { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0); }
+  }
+  /* §6.1 — display, §6.3 SemiBold default, §6.4 -0.01em tracking
+     for the 88-128px range. Sized to 120px so it reads as a metric
+     rather than a hero, leaving room on the right for phase chips. */
+  .hero-num {
+    font-family: var(--display);
+    font-size: 120px;
+    font-weight: 600;
+    line-height: 0.84;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .hero-unit {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  body:not(.dark) .hero-unit { font-weight: 500; }
+  .hero-caption {
+    font-family: var(--body);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--text-subtle);
+    margin-top: 16px;
+    max-width: 32ch;
+  }
+
+  /* ── Project Info panel — split into 2 columns: title + body
+     stacked on the left, stats stacked vertically on the right. ── */
+  .project-hero-frame {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 32px;
+    min-height: 0;
+    min-width: 0;
+  }
+  .project-info-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    min-width: 0;
+  }
+  /* §6.1 Title tier (64-88px), §6.3 SemiBold default,
+     §6.4 -0.01em tracking for 64-88px range. Sized to 48px since
+     the panel now sits next to a 256px hero numeral and shouldn't
+     compete for focal weight. */
+  .project-title {
+    font-family: var(--display);
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.005em;
+    color: var(--text);
+  }
+  /* §6.1 Lead tier (24-28px) — §6.4 0 to -0.01em tracking,
+     §6.5 body family with default 0 spacing. */
+  .project-subtitle {
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    max-width: 60ch;
+  }
+
+  /* ── Stat callouts — §7.4 callout pattern: panel-on-panel surface
+       bump + accent stripe on the leading edge. Three inline cards. ── */
+  .project-stats {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    min-width: 0;
+  }
+  .project-stat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 16px 16px 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  body:not(.dark) .project-stat { background: rgba(0, 0, 0, 0.04); }
+  .project-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .project-stat-num {
+    font-family: var(--display);
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 0.95;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+  }
+  .project-stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  body:not(.dark) .project-stat-label { font-weight: 500; }
+
+  /* ── Timeline panel — fills the bottom row ── */
+  .timeline-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Track splits into two stacked rows: chart (top) holds the
+     staircase + gradient + dots + phase guides; axis (bottom) holds
+     each milestone's label stack. Labels never overlap the graph. */
+  .timeline-track {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    margin: 0 56px;
+    display: flex;
+    flex-direction: column;
+  }
+  .timeline-chart {
+    position: relative;
+    flex: 64 1 0;
+    min-height: 0;
+  }
+  .timeline-axis {
+    position: relative;
+    flex: 36 1 0;
+    min-height: 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-interior);
+  }
+
+  /* SVG chart layer — staircase line with area-under-line gradient.
+     preserveAspectRatio="none" + non-scaling-stroke lets the path
+     stretch with the panel while the stroke stays a clean 2px.
+     Clip-path reveals left-to-right on page entry.
+     z-index ramp: chart-svg (0) → phase guides (1) → markers (3). */
+  .timeline-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .timeline-section.fill-active .timeline-svg {
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* Phase bands — vertical chart-region dividers within the chart row.
+     Label sits at the top of the chart area. */
+  .phase-band {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .phase-band:not(:first-child) {
+    border-left: 1px solid var(--rule-interior);
+  }
+  .phase-band-label {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  body:not(.dark) .phase-band-label { font-weight: 500; }
+
+  /* Marker = dot at the chart point. Sits inside .timeline-chart at
+     `left: pos%; bottom: y%`. Each marker is a 0×0 box with the dot
+     centered on its origin via translate(-50%, -50%). */
+  .timeline-marker {
+    position: absolute;
+    width: 0;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 400ms ease, transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 3;
+  }
+  .timeline-section.fill-active .timeline-marker {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .timeline-dot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--bg-panel);
+  }
+  .timeline-marker.terminal .timeline-dot {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 0 3px var(--bg-panel),
+                0 0 12px rgba(255, 79, 0, 0.7);
+  }
+  .timeline-marker.terminal .timeline-dot::after,
+  .timeline-marker.terminal .timeline-dot::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    opacity: 0;
+  }
+  .timeline-section.fill-active .timeline-marker.terminal .timeline-dot::after {
+    animation: timeline-bloop 2.4s ease-out 1.6s infinite;
+  }
+  .timeline-section.fill-active .timeline-marker.terminal .timeline-dot::before {
+    animation: timeline-bloop 2.4s ease-out 2.8s infinite;
+  }
+  @keyframes timeline-bloop {
+    0%   { transform: scale(0.6); opacity: 0.7; }
+    100% { transform: scale(3.4); opacity: 0; }
+  }
+
+  /* Stack = label block in the axis row, anchored to its milestone's
+     x position. Mid stacks are centered on the x; edge stacks
+     (first/last) align to the track edges so they don't clip. */
+  .timeline-stack {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: max-content;
+    max-width: 180px;
+    text-align: left;
+    align-items: flex-start;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 480ms ease;
+  }
+  .timeline-section.fill-active .timeline-stack { opacity: 1; }
+  .timeline-stack[data-edge="start"] {
+    transform: translateX(0);
+  }
+  .timeline-stack[data-edge="end"] {
+    transform: translateX(-100%);
+  }
+  .timeline-stack .timeline-date {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  body:not(.dark) .timeline-stack .timeline-date { font-weight: 500; }
+  .timeline-stack .timeline-label {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+  }
+  .timeline-stack .timeline-cap {
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--text-subtle);
+    line-height: 1.35;
   }
 
   /* Globe stage on Page 2 — new chip-overlay design: chip columns flank
@@ -1154,8 +1566,9 @@
       </div>
       <button class="page-toggle" id="page-toggle" aria-label="Toggle page">
         <svg viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
-          <rect class="slot active" id="page-slot-0" x="0" y="3" width="9" height="8" rx="2"/>
-          <rect class="slot" id="page-slot-1" x="11" y="3" width="9" height="8" rx="2"/>
+          <rect class="slot active" id="page-slot-0" x="0"  y="4" width="6" height="6" rx="2"/>
+          <rect class="slot" id="page-slot-1" x="7"  y="4" width="6" height="6" rx="2"/>
+          <rect class="slot" id="page-slot-2" x="14" y="4" width="6" height="6" rx="2"/>
         </svg>
       </button>
     </div>
@@ -1263,6 +1676,51 @@
       </div>
       <div class="zone-clocks" id="zone-clocks"></div>
     </section>
+  </main>
+
+  <main class="d-main d-main--project page" data-page="2">
+
+    <!-- PROJECT DETAIL — hero numeral focal moment -->
+    <section class="cell project-detail">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Project Detail</span>
+        <span class="cell-meta">Speed to Print</span>
+      </header>
+      <div class="project-hero-num">
+        <div class="hero-num-stack">
+          <div class="hero-num">9</div>
+          <div class="hero-unit">Months</div>
+        </div>
+        <div class="phase-chips" id="phase-chips"></div>
+      </div>
+    </section>
+
+    <!-- PROJECT INFO — title, copy, supporting stats -->
+    <section class="cell project-info">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Project Info</span>
+        <span class="cell-meta">Dallas, TX · Print Phase Complete</span>
+      </header>
+      <div class="project-hero-frame">
+        <div class="project-info-left">
+          <h1 class="project-title">DFW Material Testing Lab</h1>
+          <p class="project-subtitle">First-of-its-kind printed-concrete validation facility supporting ASTM-grade aggregate and additive testing for the Titan and Olympus programs. Print path optimized over nine revisions from Schematic Design through Open Nozzle.</p>
+        </div>
+        <div class="project-stats" id="project-stats"></div>
+      </div>
+    </section>
+
+    <!-- SPEED-TO-PRINT TIMELINE — full row -->
+    <section class="cell project-timeline-cell">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Speed-to-Print Timeline</span>
+        <span class="cell-meta">Schematic Design → Open Nozzle</span>
+      </header>
+      <div class="timeline-section" id="timeline-section">
+        <div class="timeline-track" id="timeline-track"></div>
+      </div>
+    </section>
+
   </main>
 
     </div>
@@ -1556,6 +2014,213 @@
   }
 
   // ============================================
+  // PROJECT DETAIL — DFW Material Testing Lab
+  // Stats and Speed-to-Print timeline. Milestone dates sourced from the
+  // "Design-to-Print Timeline - DFW MTL" deck and the dated revisions
+  // of the "DFW-MTL_ICON PRINT PATH SHOPS" PDF series in Drive.
+  // ============================================
+  const projectStats = [
+    { num: '9',    label: 'Print Path Revisions' },
+    { num: '100%', label: 'Print Phase Complete' },
+    { num: '4',    label: 'BIM Model Handoffs' }
+  ];
+
+  // Phase bands — three editorial zones that contextualize the milestone
+  // sequence. Bounds are % of the timeline track, aligned to fall
+  // between adjacent milestone positions in the even-spaced layout.
+  const projectPhases = [
+    { label: 'Design',         from: 0,  to: 42 },
+    { label: 'Documentation',  from: 42, to: 92 },
+    { label: 'Print',          from: 92, to: 100 }
+  ];
+
+  // pos     = x along the timeline, distributed evenly across the
+  //           track so the milestones read with consistent rhythm
+  //           rather than clumping by calendar gap.
+  // y       = chart elevation (0-100, % of track height) — quantized
+  //           to print-path version levels so each release is a step
+  //           up to a new plateau (right-step / staircase pattern).
+  // version = print path version label, used for the engineering-
+  //           register read alongside the milestone name.
+  const projectTimeline = [
+    { date: 'Apr 2025', label: 'Project Kickoff',      cap: 'BIM kickoff · Schematic Design',         version: 'v0',   pos: 0,     y: 8  },
+    { date: 'Jul 2025', label: 'Design-to-Print Plan', cap: 'Print path strategy established',         version: 'v1.0', pos: 16.67, y: 22 },
+    { date: 'Aug 2025', label: 'Detail Tracker',       cap: 'Print Path & Detail Tracker live',        version: 'v1.5', pos: 33.33, y: 32 },
+    { date: 'Oct 2025', label: 'Shop Drawings v2.1',   cap: 'Print Path Shops issued',                 version: 'v2.1', pos: 50,    y: 50 },
+    { date: 'Dec 2025', label: 'Print Path v3.0',      cap: 'Approved for procurement · BOM issued',   version: 'v3.0', pos: 66.67, y: 68 },
+    { date: 'Jan 2026', label: 'Print Path v3.9',      cap: 'Final review prior to nozzle',            version: 'v3.9', pos: 83.33, y: 80 },
+    { date: 'Feb 2026', label: 'Open Nozzle',          cap: 'Print phase complete',                    version: 'v4.0', pos: 100,   y: 88, terminal: true }
+  ];
+
+  // Right-step (staircase) SVG path. Each milestone marks the moment
+  // the version jumps; segments plateau at the previous y until the
+  // next milestone's x, then rise vertically to the new y.
+  function buildTimelineSvg(points, viewW, viewH) {
+    if (!points.length) return { lineD: '', areaD: '' };
+    const toSvg = p => ({
+      x: (p.pos / 100) * viewW,
+      y: viewH - (p.y / 100) * viewH
+    });
+    const sp = points.map(toSvg);
+    let lineD = `M ${sp[0].x.toFixed(2)} ${sp[0].y.toFixed(2)}`;
+    for (let i = 1; i < sp.length; i++) {
+      const a = sp[i - 1], b = sp[i];
+      // Plateau at a.y until x = b.x, then riser up to b.y.
+      lineD += ` L ${b.x.toFixed(2)} ${a.y.toFixed(2)} L ${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
+    }
+    const lastX = sp[sp.length - 1].x;
+    const firstX = sp[0].x;
+    const areaD = `${lineD} L ${lastX.toFixed(2)} ${viewH} L ${firstX.toFixed(2)} ${viewH} Z`;
+    return { lineD, areaD };
+  }
+
+  // Build phase progression chips from the canonical swim-chart data
+  // so the Project Detail and Project Tracker panels stay in lockstep.
+  // Phases are grouped into Design / Build / Finish rows with a
+  // connector hairline so the sequence reads as a stepper. Complete
+  // phases get the filled accent treatment; the most recent completed
+  // phase pulses as the leading edge of progress.
+  const PHASE_CHIP_LABELS = [
+    'Concept', 'SD', 'DD', 'CD',
+    'Sitework', 'Foundation', 'Print Prep', 'Print',
+    'Envelope', 'Interior+MEP', 'Finishes', 'Delivery'
+  ];
+  const PHASE_GROUPS = [
+    { label: 'Design', range: [0, 4]  },
+    { label: 'Build',  range: [4, 8]  },
+    { label: 'Finish', range: [8, 12] }
+  ];
+  function renderPhaseChips() {
+    const dfw = swimProjects.find(p => p.name === 'DFW Lab');
+    if (!dfw) return;
+    const container = document.getElementById('phase-chips');
+
+    // Leading-edge phase = highest index that is fully complete.
+    let leadingIdx = -1;
+    dfw.phases.forEach((pct, i) => { if (pct >= 100) leadingIdx = i; });
+
+    let chipCount = 0;
+    container.innerHTML = PHASE_GROUPS.map(group => {
+      const chips = dfw.phases.slice(group.range[0], group.range[1]).map((pct, gi) => {
+        const i = group.range[0] + gi;
+        const cls = pct >= 100 ? 'complete' : 'pending';
+        const leading = i === leadingIdx ? ' leading' : '';
+        const delay = chipCount * 70;
+        chipCount++;
+        return `<div class="phase-chip ${cls}${leading}" style="--d: ${delay}ms">${PHASE_CHIP_LABELS[i]}</div>`;
+      }).join('');
+      return `
+        <div class="phase-group">
+          <div class="phase-group-label">${group.label}</div>
+          <div class="phase-row">${chips}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Trigger the chip cascade — fires on every Page 3 entry so the
+  // entrance plays fresh each cycle (matches animateTimeline pattern).
+  function animateProjectDetail() {
+    const cell = document.querySelector('.project-detail');
+    if (!cell) return;
+    cell.classList.remove('fill-active');
+    void cell.offsetWidth;  // force reflow so the animation restarts
+    cell.classList.add('fill-active');
+  }
+
+  function renderProjectDetail() {
+    const stats = document.getElementById('project-stats');
+    stats.innerHTML = projectStats.map(s => `
+      <div class="project-stat">
+        <div class="project-stat-num">${s.num}</div>
+        <div class="project-stat-label">${s.label}</div>
+      </div>
+    `).join('');
+    renderPhaseChips();
+
+    const track = document.getElementById('timeline-track');
+
+    // Phase bands — live in the chart row (vertical region dividers).
+    const phases = projectPhases.map(ph => `
+      <div class="phase-band" style="left: ${ph.from}%; width: ${ph.to - ph.from}%;">
+        <div class="phase-band-label">${ph.label}</div>
+      </div>
+    `).join('');
+
+    // Markers (dots at chart point) — also in the chart row.
+    const markers = projectTimeline.map((m, i) => {
+      const delay = 1100 + i * 120;
+      return `
+        <div class="timeline-marker ${m.terminal ? 'terminal' : ''}"
+             style="left: ${m.pos}%; bottom: ${m.y}%; transition-delay: ${delay}ms;">
+          <div class="timeline-dot"></div>
+        </div>
+      `;
+    }).join('');
+
+    // Label stacks (date / name / cap) — live in the axis row below
+    // the chart so they never overlap the graph visual.
+    const stacks = projectTimeline.map((m, i) => {
+      const edge = i === 0 ? 'start' : i === projectTimeline.length - 1 ? 'end' : 'mid';
+      const delay = 1300 + i * 120;
+      return `
+        <div class="timeline-stack"
+             data-edge="${edge}"
+             style="left: ${m.pos}%; transition-delay: ${delay}ms;">
+          <div class="timeline-date">${m.date}</div>
+          <div class="timeline-label">${m.label}</div>
+          <div class="timeline-cap">${m.cap}</div>
+        </div>
+      `;
+    }).join('');
+
+    // SVG chart: staircase line + area fill. viewBox 1000×100 with
+    // preserveAspectRatio="none" lets the path stretch to the panel
+    // while non-scaling-stroke keeps the line a clean 2px.
+    const VW = 1000, VH = 100;
+    const { lineD, areaD } = buildTimelineSvg(projectTimeline, VW, VH);
+    const svg = `
+      <svg class="timeline-svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="tl-stroke" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#FF4F00" stop-opacity="0.10"/>
+            <stop offset="1" stop-color="#FF4F00" stop-opacity="1.00"/>
+          </linearGradient>
+          <linearGradient id="tl-area" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0"    stop-color="#FF4F00" stop-opacity="0.40"/>
+            <stop offset="0.55" stop-color="#FF4F00" stop-opacity="0.10"/>
+            <stop offset="1"    stop-color="#FF4F00" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaD}" fill="url(#tl-area)"/>
+        <path d="${lineD}"
+              stroke="url(#tl-stroke)"
+              stroke-width="2"
+              fill="none"
+              vector-effect="non-scaling-stroke"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+    `;
+
+    track.innerHTML = `
+      <div class="timeline-chart">${svg}${phases}${markers}</div>
+      <div class="timeline-axis">${stacks}</div>
+    `;
+  }
+
+  // Trigger the timeline entrance — gradient line fills, milestones cascade
+  // in, terminal node begins its radar pulse. Re-render strips the class so
+  // the next page entry replays the moment fresh.
+  function animateTimeline() {
+    const section = document.getElementById('timeline-section');
+    if (!section) return;
+    section.classList.remove('fill-active');
+    void section.offsetWidth;  // force reflow so the animation restarts
+    section.classList.add('fill-active');
+  }
+
+  // ============================================
   // STATS TICKER (continuous scroll, duplicated for seamless loop)
   // ============================================
   const stats = [
@@ -1686,6 +2351,7 @@
   // ============================================
   const OKR_DURATION = 15_000;   // per objective on Page 1
   const PAGE_2_ROTATIONS = 2;    // how many full globe rotations to show
+  const PAGE_3_DURATION = 25_000; // press panel hold
 
   // Compute Page 2 duration from current globe spin rate.
   // Falls back to 30s if the globe IIFE hasn't initialized yet.
@@ -1704,14 +2370,13 @@
     currentPage = pageIndex;
     const track = document.getElementById('pages-track');
     track.classList.toggle('page-1', currentPage === 1);
+    track.classList.toggle('page-2', currentPage === 2);
 
-    // Sync page-toggle button slot indicator
-    const slot0 = document.getElementById('page-slot-0');
-    const slot1 = document.getElementById('page-slot-1');
-    if (slot0 && slot1) {
-      slot0.classList.toggle('active', currentPage === 0);
-      slot1.classList.toggle('active', currentPage === 1);
-    }
+    // Sync page-toggle button slot indicators
+    [0, 1, 2].forEach(i => {
+      const slot = document.getElementById(`page-slot-${i}`);
+      if (slot) slot.classList.toggle('active', currentPage === i);
+    });
   }
 
   function startPage1() {
@@ -1744,9 +2409,21 @@
     setPage(1);
     animateTracker();
     pageTimer = setTimeout(() => {
-      // Slide back to Page 1, reset OKR to the first objective
-      startPage1();
+      // Continue to the press panel
+      startPage3();
     }, getPage2Duration());
+  }
+
+  function startPage3() {
+    clearTimeout(okrTimer);
+    clearTimeout(pageTimer);
+    setPage(2);
+    animateProjectDetail();
+    animateTimeline();
+    pageTimer = setTimeout(() => {
+      // Loop back to the OKR walk
+      startPage1();
+    }, PAGE_3_DURATION);
   }
 
   // ============================================
@@ -1759,6 +2436,7 @@
   renderKpi();
   renderTicker();
   renderTracker();
+  renderProjectDetail();
 
   setInterval(updateClock,       5_000);
   setInterval(updateCountdowns, 60_000);
@@ -1779,11 +2457,9 @@
   // cleanly from the new state (Page 1 starts a fresh OKR walk from #1;
   // Page 2 starts a fresh 30s hold then returns to OKR #1).
   document.getElementById('page-toggle').addEventListener('click', () => {
-    if (currentPage === 0) {
-      startPage2();
-    } else {
-      startPage1();
-    }
+    if (currentPage === 0)      startPage2();
+    else if (currentPage === 1) startPage3();
+    else                        startPage1();
   });
 
   // ============================================
