@@ -630,6 +630,7 @@
     min-height: 0;
     overflow: hidden;
     position: relative;
+    border-radius: 6px;
   }
 
   .cell-head {
@@ -1938,8 +1939,8 @@
   const THEMES = {
     night: {
       base: '255, 255, 255',
-      limb: 0.55, latGrid: 0.32, latEq: 0.55, lngGrid: 0.32, lngPM: 0.55,
-      contMin: 0.35, contRange: 0.50,
+      limb: 0.30, latGrid: 0.15, latEq: 0.30, lngGrid: 0.15, lngPM: 0.30,
+      contMin: 0.17, contRange: 0.28,
       pinFill: '#FFFFFF', pinStroke: 'rgba(255,255,255,0)',
       glowInner: 'rgba(255,255,255,0.45)', glowOuter: 'rgba(255,255,255,0)',
       pulse: '255, 255, 255',
@@ -2046,100 +2047,6 @@
     return { x: cx + v.x * r, y: cy - v.y * r, z: v.z };
   }
 
-  // ────────────────────────────────────────────────────────────────
-  // Celestial bodies orbiting Earth in 3D space.
-  // Each orbit is a circle in its own plane, parameterized by:
-  //   R     : orbital radius in Earth radii (1.0 = surface)
-  //   inc   : inclination from equatorial plane (rad)
-  //   node  : longitude of ascending node — orients the orbit (rad)
-  //   speed : angular velocity (rad/s) — independent of Earth's spin
-  //   phase : initial angular phase (rad)
-  //   size  : body radius multiplier (in px units)
-  //   kind  : 'moon' (white-gray) or 'sat' (accent orange)
-  const CELESTIAL_BODIES = [
-    { R: 1.62, inc: 0.18, node: 0.40,  speed: 0.18, phase: 0.0, size: 4.4, kind: 'moon' },
-    { R: 1.22, inc: 1.10, node: 1.70,  speed: 0.62, phase: 1.1, size: 2.1, kind: 'sat'  },
-    { R: 1.36, inc: 0.55, node: -0.90, speed: 0.42, phase: 2.4, size: 1.9, kind: 'sat'  },
-  ];
-
-  // Position a body at angle `ang` along its orbit, in scene coords.
-  // Bodies orbit independently of Earth's spin but share the camera tilt.
-  function orbitPoint(body, ang) {
-    let v = { x: Math.cos(ang) * body.R, y: 0, z: Math.sin(ang) * body.R };
-    v = rotateX(v, body.inc);
-    v = rotateY(v, body.node);
-    v = rotateX(v, TILT);
-    return v;
-  }
-  function bodyPos(body, tSec) {
-    return orbitPoint(body, body.phase + body.speed * tSec);
-  }
-
-  // Draw an orbit ring. `pass` selects which half: 'back' (behind Earth)
-  // is dashed and dim; 'front' is solid and brighter.
-  function drawOrbitRing(ctx, body, cx, cy, r, px, T, pass) {
-    const SEG = 96;
-    ctx.lineWidth = Math.max(0.6, 0.8 * px);
-    if (pass === 'back') ctx.setLineDash([2 * px, 4 * px]);
-    else                 ctx.setLineDash([]);
-    ctx.strokeStyle = `rgba(${T.base},${pass === 'back' ? 0.10 : 0.26})`;
-    for (let i = 0; i < SEG; i++) {
-      const a1 = (i / SEG) * Math.PI * 2;
-      const a2 = ((i + 1) / SEG) * Math.PI * 2;
-      const v1 = orbitPoint(body, a1);
-      const v2 = orbitPoint(body, a2);
-      const midZ = (v1.z + v2.z) / 2;
-      const isBack = midZ < 0;
-      if (pass === 'back' && !isBack) continue;
-      if (pass === 'front' && isBack) continue;
-      const p1 = project(v1, cx, cy, r);
-      const p2 = project(v2, cx, cy, r);
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-  }
-
-  // Draw a body. Earth occludes back-half bodies whose 2D projection
-  // falls within Earth's silhouette (x² + y² < 1 in Earth-radii units).
-  function drawBody(ctx, v, cx, cy, r, px, T, body) {
-    const inSilhouette = (v.x * v.x + v.y * v.y) < 1;
-    const occluded = (v.z < 0) && inSilhouette;
-    if (occluded) return;
-
-    const p = project(v, cx, cy, r);
-    const depthT = (v.z / body.R + 1) / 2;          // 0 (far) → 1 (near)
-    const baseAlpha = 0.45 + depthT * 0.50;
-    const radius = Math.max(1.2, body.size * px * (0.7 + depthT * 0.55));
-
-    if (body.kind === 'moon') {
-      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 2.6);
-      grad.addColorStop(0, `rgba(${T.base},${baseAlpha * 0.35})`);
-      grad.addColorStop(1, `rgba(${T.base},0)`);
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius * 2.6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(${T.base},${baseAlpha})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      const accent = '255, 79, 0';
-      ctx.fillStyle = `rgba(${accent},${baseAlpha})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = `rgba(${accent},${baseAlpha * 0.45})`;
-      ctx.lineWidth = Math.max(0.5, 0.8 * px);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius * 2.1, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
-
   // Tilt keeps US visible while spinning; rotation animates over time (CCW).
   // SPIN_RATE exposed on window so the page orchestration can compute
   // Page 2 duration as N full rotations.
@@ -2174,23 +2081,13 @@
     const h = canvas.clientHeight;
 
     // Globe centered; chips flank left/right with horizontal margin
-    const SIDE_RESERVE = 150;
+    const SIDE_RESERVE = 130;
     const cx = w / 2;
     const cy = h / 2;
-    const r  = Math.min((w - SIDE_RESERVE * 2) * 0.5, h * 0.46);
+    const r  = Math.min((w - SIDE_RESERVE * 2) * 0.5, h * 0.56);
     const px = r / 220;
 
     ctx.clearRect(0, 0, w, h);
-
-    // ── Celestial bodies: back half (behind Earth) ──
-    // Drawn before the globe so Earth's surface naturally occludes
-    // anything that would pass through its silhouette.
-    const tSec = performance.now() / 1000;
-    for (const body of CELESTIAL_BODIES) {
-      drawOrbitRing(ctx, body, cx, cy, r, px, T, 'back');
-      const v = bodyPos(body, tSec);
-      if (v.z < 0) drawBody(ctx, v, cx, cy, r, px, T, body);
-    }
 
     // Limb
     ctx.strokeStyle = `rgba(${T.base},${T.limb})`;
@@ -2315,20 +2212,27 @@
       const c2x = pin.p.x - dx * 0.30;
       const c2y = pin.p.y - dy * 0.20;
 
+      // Tether stroke matches the project tracker swim line — comet-tail
+      // gradient from faint at the chip anchor to full at the pin (the pin
+      // itself plays the role of the swim's leading-edge dot). Back-facing
+      // tethers stay dashed for depth, but use the same accent so the
+      // palette reads as one system across both panels.
       ctx.beginPath();
       ctx.moveTo(ax, ay);
       ctx.bezierCurveTo(c1x, c1y, c2x, c2y, pin.p.x, pin.p.y);
-      ctx.strokeStyle = onFront ? T.tetherFront : T.tetherBack;
-      ctx.lineWidth = Math.max(1.0, (onFront ? 1.1 : 0.9) * px);
-      if (!onFront) ctx.setLineDash([3 * px, 4 * px]);
+      if (onFront) {
+        const grad = ctx.createLinearGradient(ax, ay, pin.p.x, pin.p.y);
+        grad.addColorStop(0, 'rgba(255, 79, 0, 0.10)');
+        grad.addColorStop(1, 'rgba(255, 79, 0, 1.00)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = Math.max(1.5, 1.5 * px);
+      } else {
+        ctx.strokeStyle = 'rgba(255, 79, 0, 0.18)';
+        ctx.lineWidth = Math.max(0.9, 1.0 * px);
+        ctx.setLineDash([3 * px, 4 * px]);
+      }
       ctx.stroke();
       ctx.setLineDash([]);
-
-      // Anchor dot at chip side
-      ctx.beginPath();
-      ctx.arc(ax, ay, Math.max(1.4, 1.6 * px), 0, Math.PI * 2);
-      ctx.fillStyle = onFront ? T.tetherFront : T.tetherBack;
-      ctx.fill();
     });
 
     // Front-facing pins
@@ -2351,15 +2255,17 @@
         ctx.stroke();
       });
 
-    // Radar bloop on Austin — two staggered rings expand outward and fade,
-    // emulating sonar/radar pings rather than a steady pulse.
-    const austin = projected[0];
-    if (austin && austin.v.z > 0) {
-      const PERIOD = 2000;     // ms per full ping cycle
-      const RINGS = 2;          // staggered overlapping rings
-      const minR = Math.max(3, 4 * px);
-      const maxR = Math.max(28, 36 * px);
+    // Radar bloop on Austin + Miami — two staggered rings expand outward
+    // and fade, emulating sonar/radar pings rather than a steady pulse.
+    const BLOOP_SITES = [0, 4];   // SITES indices: Austin, Miami
+    const PERIOD = 2000;          // ms per full ping cycle
+    const RINGS = 2;              // staggered overlapping rings per site
+    const minR = Math.max(3, 4 * px);
+    const maxR = Math.max(28, 36 * px);
 
+    for (const idx of BLOOP_SITES) {
+      const site = projected[idx];
+      if (!site || site.v.z <= 0) continue;
       for (let i = 0; i < RINGS; i++) {
         // Each ring offset by 1/RINGS of the period for overlapping waves
         const t = ((performance.now() / PERIOD) + (i / RINGS)) % 1;
@@ -2367,75 +2273,13 @@
         const alpha = (1 - t) * 0.65;  // fade as ring expands
 
         ctx.beginPath();
-        ctx.arc(austin.p.x, austin.p.y, ringR, 0, Math.PI * 2);
+        ctx.arc(site.p.x, site.p.y, ringR, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(${T.pulse}, ${alpha})`;
         ctx.lineWidth = Math.max(0.9, 1.1 * px);
         ctx.stroke();
       }
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Sun & moon — orbit the globe in 3D. Different inclinations,
-    // radii, and periods so they trace independent paths. Alpha fades
-    // when behind the globe (z < 0) for the illusion of occlusion.
-    const tNow = performance.now() / 1000;
-
-    function orbit(period, radius, inclDeg, phase) {
-      const a = (tNow / period) * Math.PI * 2 + phase;
-      let v = { x: Math.cos(a) * radius, y: 0, z: Math.sin(a) * radius };
-      v = rotateX(v, inclDeg * Math.PI / 180);
-      v = rotateX(v, TILT);
-      return v;
-    }
-
-    function drawBody(v, baseRadiusPx, color, glowColor) {
-      const p = project(v, cx, cy, r);
-      // Depth fade: full alpha in front, dim when deep behind
-      const depth = v.z;  // ranges roughly -orbitR..+orbitR (unit globe)
-      const front = depth > 0;
-      const alpha = front ? 1 : Math.max(0.18, 0.55 + depth * 0.6);
-      const sizeMul = front ? 1 : 0.85;
-      const radPx = baseRadiusPx * sizeMul;
-
-      // Outer glow
-      const grd = ctx.createRadialGradient(p.x, p.y, radPx * 0.3, p.x, p.y, radPx * 3);
-      grd.addColorStop(0, glowColor.replace('ALPHA', (0.55 * alpha).toFixed(3)));
-      grd.addColorStop(1, glowColor.replace('ALPHA', '0'));
-      ctx.fillStyle = grd;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radPx * 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Body
-      ctx.fillStyle = color.replace('ALPHA', alpha.toFixed(3));
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radPx, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Sun: warm orange, larger, slower, low inclination
-    const sunV = orbit(80, 1.65, 12, 0.7);
-    drawBody(sunV, 9 * px, 'rgba(255, 165, 60, ALPHA)', 'rgba(255, 120, 40, ALPHA)');
-
-    // Moon: cool white, smaller, faster, higher inclination opposite phase
-    const moonV = orbit(28, 1.30, -32, 2.4);
-    drawBody(moonV, 5 * px, 'rgba(230, 232, 240, ALPHA)', 'rgba(200, 210, 230, ALPHA)');
-
-    // ISS: very close orbit, fast (~5s period). Tiny bright dot.
-    const issV = orbit(5.4, 1.08, 51.6, 1.2);
-    drawBody(issV, 1.4 * px, 'rgba(255, 255, 255, ALPHA)', 'rgba(255, 240, 220, ALPHA)');
-
-    // GPS satellite: medium orbit, slower than ISS.
-    const sat1V = orbit(11, 1.18, -28, 4.1);
-    drawBody(sat1V, 1.0 * px, 'rgba(220, 230, 245, ALPHA)', 'rgba(200, 215, 235, ALPHA)');
-
-    // Comms satellite: another orbit, different inclination.
-    const sat2V = orbit(8, 1.14, 67, 2.8);
-    drawBody(sat2V, 1.0 * px, 'rgba(220, 230, 245, ALPHA)', 'rgba(200, 215, 235, ALPHA)');
-
-    // Asteroid: slow eccentric-feeling orbit further out, dim grey.
-    const astV = orbit(140, 1.85, -8, 5.3);
-    drawBody(astV, 2.2 * px, 'rgba(150, 140, 130, ALPHA)', 'rgba(120, 110, 100, ALPHA)');
   }
 
   function tick(now) {
