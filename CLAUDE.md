@@ -62,6 +62,7 @@ When the brand md doesn't fully prescribe an answer:
 §1 sub-brand discipline, palettes, logo+orbital paths.
 §2 surface defaults per sub-brand.
 §3 token system — surfaces, accent, status, on-surface, hairlines.
+§5 page grids — canonical Letter / Slides / Web (3-tier responsive: desktop 768+, tablet 480–767, mobile <480) / Dashboard defaults. Apply automatically when generating a new document of the corresponding type.
 §6 typography — scale, weights, tracking rules, mono cap.
 §6.3 — Lightspeed display weight defaults: mixed-case = SemiBold, uppercase = Bold; accent-colored display steps up one weight (mixed-in-accent → Bold). Stat-row figures override and are always Bold per §7.6.
 §6.5 — body default weight is Medium (500), not Regular.
