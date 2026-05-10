@@ -22,6 +22,8 @@ The file is large (~1MB+) due to embedded base64 images for the slideshow. Perfo
 
 ## Architecture
 
+The dashboard layout is the canonical free-form panel grid from brand md §5: 1920×1080, 80px fixed header, sliding viewport, 80px fixed ticker. Internal structure below applies to *this* dashboard build.
+
 **Two-page slide system.** Header (80px, fixed) + pages-viewport (sliding) + ticker (80px, fixed). Pages slide horizontally via CSS transform with a 900ms cubic-bezier transition.
 
 **Page 1** is a 3-column grid of business intel: countdown panel (left, hero), OKR scroller (top right), KPI table (bottom left), upcoming events (bottom middle), field imagery slideshow (bottom right).
@@ -37,7 +39,7 @@ The file is large (~1MB+) due to embedded base64 images for the slideshow. Perfo
 `icon-brand.md` is the primary reference for sub-brand discipline, palette tokens, typography rules, and component patterns. Things specific to dashboard work that aren't in the brand md:
 
 - **Live register applies.** The dashboard is a live surface (§6.10 of brand md) — updating, scanned at distance, instrument-panel ambitions. This relaxes some chrome-density rules and permits motion patterns (radar bloop, cascade animations, pulse halos).
-- **Status text and dots travel together.** Both color-driven by `--status-on/risk/off` tokens. Don't decouple them.
+- **Status text and dots travel together.** Both color-driven by `--status-on/risk/off` tokens. Don't decouple them. (Reinforces brand md §4 — applies brand-wide; called out here because dashboard density makes it especially tempting to violate.)
 - **Mono numeric cells stay tabular at heart even when the loaded font isn't strictly monospace.** Roboto Mono is the canonical choice; switching to a non-monospace font for experimentation breaks column alignment.
 - **Animation timing is deliberate.** Cascade fills run ~3 seconds, leading-edge dots appear at ~1s after their line completes, radar pulses every 2s. The whole rhythm is tuned to feel "alive but not anxious."
 
@@ -62,10 +64,12 @@ When the brand md doesn't fully prescribe an answer:
 §1 sub-brand discipline, palettes, logo+orbital paths.
 §2 surface defaults per sub-brand.
 §3 token system — surfaces, accent, status, on-surface, hairlines.
+§4 status palette + dot/text co-color rule.
 §5 page grids — canonical Letter / Slides / Web (3-tier responsive: desktop 768+, tablet 480–767, mobile <480) / Dashboard defaults. Apply automatically when generating a new document of the corresponding type.
 §6 typography — scale, weights, tracking rules, mono cap.
 §6.3 — Lightspeed display weight defaults: mixed-case = SemiBold, uppercase = Bold; accent-colored display steps up one weight (mixed-in-accent → Bold). Stat-row figures override and are always Bold per §7.6.
 §6.5 — body default weight is Medium (500), not Regular.
+§6.6 — mono is always uppercase; mono is the system-telemetry register (data values, labels, eyebrows, timestamps, IDs, status text).
 §6.7 — mono weight on light surfaces is Medium; mono on dark is Regular (irradiation rule).
 §6.8 — hairline tier system.
 §6.9 — status-at-density opacity scale.
@@ -75,5 +79,6 @@ When the brand md doesn't fully prescribe an answer:
 §6.13 — data table typography: body face for narrative content, mono for categorical/identifier/timestamp; 10pt body cell content at line-height 1.2; no top rule on `<thead>`; units belong in label cell, not value cell; accent NOT used in data tables.
 §7.5 — chrome economy (every chrome element earns its presence).
 §7.6 — stat-row: figures are single text element, all Bold (700), unit suffix inline at same size/weight; reduce size before tracking when overflowing.
+§10 — charts, diagrams & technical illustration. Explicitly applies to live dashboards. §10.1 general principles (minimal chrome, horizontal-only gridlines, single focal accent, mono-caps labels, source attribution required); §10.2 line charts with plan/actual; §10.3 bar/column; §10.4 combo/dual-axis; §10.5 inline callouts and event markers.
 
 When in doubt, read the brand md before improvising. When the brand md is wrong, fix it (and update userMemories).

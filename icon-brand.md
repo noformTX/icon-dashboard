@@ -65,9 +65,7 @@ Each sub-brand has **one** default body surface for screen and digital deliverab
 
 **For deliverables created to be printed, default to white body (`#FFFFFF`)** regardless of sub-brand, unless another surface color is explicitly requested. The screen surfaces above are tuned for backlit display: G90 reads muddy on paper, and the dark surfaces (G10, S10) waste toner without a clear editorial reason. Sub-brand identity carries through the accent and the type — only the body changes from screen-light/screen-dark to paper-white.
 
-Print is the default for physical formats — letter, tabloid, A4/A3 — and anything where a printed copy is the intended primary form. The screen body is the default for dashboards, web pages, in-product surfaces, and slides shown live.
-
-**PDF export does not auto-trigger print body.** A PDF is a delivery format, not a deliverable type — it inherits the source surface of whatever is being exported. A dashboard exported to PDF stays on its dark screen body; a slide deck exported to PDF stays on its sub-brand screen body; a letter exported to PDF was already on print body because it's a letter, not because it's a PDF. The only thing that flips a PDF to print body is the deliverable being explicitly destined for print (the user says it's getting printed, or it's a physical format per the list above). When unclear, ask.
+Print is the default for anything letter-sized, tabloid, A4/A3, anything destined for export-to-PDF-and-share, and anything where a printed copy is the intended primary form. The screen body is the default for dashboards, web pages, in-product surfaces, and slides shown live.
 
 PRIME or Tech can still print on their dark surface when the editorial direction calls for it — e.g. a PRIME pitch printed for stakeholders who expect the dark register, or a launch announcement where the dark surface is the visual signature. That's an opt-in override per deliverable, not the default. Ask "is this getting printed?" before specifying a body surface.
 
