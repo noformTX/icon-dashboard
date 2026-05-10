@@ -151,10 +151,15 @@ When status text and dots co-exist, color them together via shared `--status-on/
 
 Standard spacing scale: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128px. Compose layouts on multiples of 8 unless tight type setting requires 4. Avoid 10/14/18/22 — they're invisible on inspection but compound into off-grid drift.
 
-Page grids:
-- Letter: 8 cols × 10 rows, 32px margin, 16px gutters, stretch, at 612×792 (1632×2112 @2x). Default Figma layout grid for all letter-format documents — overlay renders as FF0000 @ 10% (non-printing).
-- Slides: 12-col, 24px gutters at 1920×1080.
-- Dashboard: free-form panel grid at 1920×1080. The dashboard is a fixed 80px header / sliding viewport / 80px ticker stack; panels sit inside the viewport in CSS grid.
+**Page grids — canonical defaults.** Apply these whenever starting a new document of the listed type (letter, slide deck, website) unless the user explicitly specifies otherwise. All overlays use Figma's `Stretch` type and render as `FF0000` at 10% opacity (non-printing).
+
+- **Letter** (612×792, 1632×2112 @2x): 8 cols × 10 rows, 32px margin, 16px gutters.
+- **Slides** (1920×1080): 8 cols × 6 rows, 80px margin, 32px gutters.
+- **Web** (responsive, columns only — no rows). Three breakpoints, applied per viewport width:
+  - Desktop (≥768px): 8 cols, 80px margin, 32px gutters.
+  - Tablet (480–767px): 6 cols, 48px margin, 24px gutters.
+  - Mobile (<480px): 4 cols, 24px margin, 16px gutters.
+- **Dashboard** (1920×1080): free-form panel grid. The dashboard is a fixed 80px header / sliding viewport / 80px ticker stack; panels sit inside the viewport in CSS grid.
 
 ---
 
