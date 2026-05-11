@@ -1646,22 +1646,12 @@
   // ============================================
   // PAGE / OKR ROTATION ORCHESTRATION
   //
-  // Cycle: Page 1 (project tracker + globe) holds for 2 full globe
-  // rotations (~96s), slides to Page 2 (project detail spotlight),
-  // holds 25s, returns to Page 1. Manual page-toggle in header
-  // interrupts the cycle and advances one page.
+  // Cycle: Page 1 (project tracker + globe) holds ~45s, slides to Page 2
+  // (project detail spotlight), holds 25s, returns to Page 1. Manual
+  // page-toggle in header interrupts the cycle and advances one page.
   // ============================================
-  const PAGE_1_ROTATIONS = 2;       // full globe rotations on Page 1
-  const PAGE_2_DURATION  = 25_000;  // project-detail hold
-
-  // Compute Page 1 duration from current globe spin rate.
-  // Falls back to 30s if the globe IIFE hasn't initialized yet.
-  function getPage1Duration() {
-    const spinRate = window.__globeSpinRate;
-    if (!spinRate) return 30_000;
-    const rotationSeconds = (Math.PI * 2) / spinRate;
-    return rotationSeconds * 1000 * PAGE_1_ROTATIONS;
-  }
+  const PAGE_1_DURATION = 45_000;  // tracker + globe hold
+  const PAGE_2_DURATION = 25_000;  // project-detail hold
 
   let currentPage = 0;
   let pageTimer  = null;
@@ -1682,7 +1672,7 @@
     clearTimeout(pageTimer);
     setPage(0);
     animateTracker();
-    pageTimer = setTimeout(() => startPage2(), getPage1Duration());
+    pageTimer = setTimeout(() => startPage2(), PAGE_1_DURATION);
   }
 
   function startPage2() {
@@ -1979,13 +1969,12 @@
     return { x: cx + v.x * r, y: cy - v.y * r, z: v.z };
   }
 
-  // Tilt keeps US visible while spinning; rotation animates over time (CCW).
-  // SPIN_RATE exposed on window so the page orchestration can compute
-  // Page 2 duration as N full rotations.
+  // Globe is locked in place — no spin. Rotation is set once to center
+  // the US print-site cluster on the front of the globe. Radar bloops
+  // on Austin + Miami still animate per frame via performance.now().
   const TILT = 0.54;
-  const SPIN_RATE = 0.13;  // rad/s
-  window.__globeSpinRate = SPIN_RATE;
-  let rotation = -0.047;
+  const SPIN_RATE = 0;       // rad/s — globe is static
+  let rotation = -0.047;     // initial rotation centers continental US
   let lastT = performance.now();
 
   // ────────────────────────────────────────────────────────────────
