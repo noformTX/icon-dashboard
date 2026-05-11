@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ICON Project Tracker — Q1 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&family=Wix+Madefor+Display:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ICON Brand 2026 — D+B / PRIME sub-brand
+     Neutral gray + orange (O50). Light mode = D+B (G90 surfaces),
+     dark mode = PRIME (G10 body). Theme auto-switches at noon/midnight;
+     manual toggle in header chrome. See ICON-BRAND.md §1, §2. */
+  :root {
+    /* Gray palette — D+B/PRIME SURFACES ONLY (HSL %L stepped, neutral) */
+    --g10: #1a1a1a;
+    --g20: #333333;
+    --g30: #4d4d4d;
+    --g40: #666666;
+    --g50: #808080;
+    --g60: #999999;
+    --g70: #b3b3b3;
+    --g80: #cccccc;
+    --g90: #e6e6e6;
+    --g95: #f2f2f2;     /* half-step between G90 and white */
+
+    /* Cyan accent (Tech) */
+    --c10: #003d3d;
+    --c50: #00ffff;     /* canonical brand cyan */
+    --c90: #ccffff;
+
+    /* Orange accent (D+B/PRIME) */
+    --o10: #2a1408;
+    --o30: #6b3315;
+    --o50: #FF4F00;     /* canonical brand orange */
+    --o70: #f08855;
+    --o90: #f9d4bf;
+
+    /* ============================================
+       D+B — light sub-brand (white body, G95 panels, orange accent)
+       ============================================ */
+
+    /* Surfaces — page #F2F2F2, panels white */
+    --bg:       var(--g95);
+    --bg-soft:  #ffffff;
+    --bg-panel: #ffffff;
+    --accent:   var(--o50);
+    --logo:     #000000;       /* wordmark — pure black on light, never tinted */
+
+    /* On-surface elements — §6.11 AA-mode discipline applies dashboard-wide
+       (TV viewed at distance). Subtle 0.55, muted 0.66, primary 0.92. */
+    --text:          rgba(0, 0, 0, 0.92);
+    --text-muted:    rgba(0, 0, 0, 0.66);
+    --text-subtle:   rgba(0, 0, 0, 0.55);
+    --rule-interior: rgba(0, 0, 0, 0.18);
+    --rule-chrome:   rgba(0, 0, 0, 0.12);
+    --surface-tint:  rgba(0, 0, 0, 0.05);
+
+    /* Status text — semantic colors. Resolved contrasts on G95:
+       green ~5.0:1 (AA pass), red ~5.5:1 (AA pass). Amber #f59e0b on
+       near-white is ~2.4:1 — fails AA, but kept vivid for live-register
+       legibility on the TV (§6.10). Verify visually before darkening. */
+    --status-on:   #16a34a;    /* vivid green */
+    --status-risk: #f59e0b;    /* vivid amber — reads as yellow not brown */
+    --status-off:  #ef4444;    /* vivid red */
+
+    /* §6 — Lightspeed is the canonical display; Wix Madefor Display is
+       the brand-approved production fallback. Lightspeed isn't loaded
+       from disk in this single-file deliverable, so display tier
+       resolves to Wix Madefor — same silhouette family. */
+    --display: 'Lightspeed', 'Wix Madefor Display', sans-serif;
+    --body:    'Helvetica Neue', 'Inter', sans-serif;
+    --mono:    'Roboto Mono', 'Courier New', monospace;
+  }
+
+  /* ============================================
+     PRIME — dark sub-brand override
+     Same brand vocabulary, different surface tier.
+     Panel sits at ~G12 (#1F1F1F) so orange clears 4.5:1 on it
+     (full G15 #262626 lifts orange below AA).
+     ============================================ */
+  body.dark {
+    /* Surfaces — body G10, panels at AA-calibrated half-step */
+    --bg:       var(--g10);
+    --bg-soft:  #1f1f1f;
+    --bg-panel: #1f1f1f;
+    --logo:     #ffffff;
+
+    /* On-surface elements — §6.11 AA-mode floors on dark: subtle 0.50,
+       muted 0.66, primary 0.92. */
+    --text:          rgba(255, 255, 255, 0.92);
+    --text-muted:    rgba(255, 255, 255, 0.66);
+    --text-subtle:   rgba(255, 255, 255, 0.50);
+    --rule-interior: rgba(255, 255, 255, 0.18);
+    --rule-chrome:   rgba(255, 255, 255, 0.12);
+    --surface-tint:  rgba(255, 255, 255, 0.05);
+
+    /* Status text — semantic, brightened for dark surface AA.
+       Resolved on G10: green ~9.5:1, amber ~11.5:1, red ~5.7:1. */
+    --status-on:   #4ade80;
+    --status-risk: #facc15;
+    --status-off:  #ef4444;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body { display: flex; align-items: center; justify-content: center; }
+
+  .dashboard {
+    width: 1920px;
+    height: 1080px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex-shrink: 0;
+    transform-origin: center center;
+    /* transform: scale() applied via JS — see fitDashboard() below.
+       The earlier `zoom: min(calc(100vw / 1920), ...)` approach failed
+       because calc returns a length and zoom rejects length values. */
+  }
+
+  /* ============================================
+     CHIP — §6.9 vocabulary
+     Orange-only, treatment-based status hierarchy
+     ============================================ */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .chip.status-on {       /* on-track: solid accent fill, dark text */
+    background: var(--accent);
+    color: var(--g10);
+  }
+  .chip.imp-high {        /* at-risk: accent on stroke + text */
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 7px 16px;    /* compensate for 1px border */
+  }
+  .chip.status-off {      /* off-track: dark fill, accent text */
+    background: var(--g20);
+    color: var(--accent);
+  }
+
+  /* Chip-mini for tighter table cells */
+  .chip.mini {
+    font-size: 11px;
+    padding: 4px 12px;
+    letter-spacing: 0.05em;
+  }
+  .chip.mini.imp-high { padding: 3px 12px; }
+
+  /* ============================================
+     STATUS LABEL — text-only, palette-coherent color
+     ============================================ */
+  .status-label {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--text-muted);
+  }
+  .status-label.on   { color: var(--status-on); }
+  .status-label.risk { color: var(--status-risk); }
+  .status-label.off  { color: var(--status-off); }
+  .status-label.mini { font-size: 12px; letter-spacing: 0.05em; }
+
+  /* Status indicator dot — leading affordance for status rows.
+     Color matches the trailing label so the row reads as a single
+     bracketed status zone. */
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.on   { background: var(--status-on); }
+  .status-dot.risk { background: var(--status-risk); }
+  .status-dot.off  { background: var(--status-off); }
+
+  /* ============================================
+     HEADER
+     ============================================ */
+  .d-header {
+    height: 80px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    border-bottom: 1px solid var(--rule-chrome);
+  }
+  .h-left { display: flex; align-items: center; gap: 24px; }
+
+  .icon-wordmark {
+    display: flex;
+    align-items: center;
+    color: var(--logo);
+    height: 32px;
+    min-width: 48px;   /* §1 — wordmark sizing 48–80px width range */
+    max-width: 80px;
+  }
+  .icon-wordmark svg { height: 100%; width: auto; display: block; }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    padding-left: 24px;
+    border-left: 1px solid var(--rule-chrome);
+  }
+  .header-meta .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .h-right { display: flex; align-items: center; gap: 32px; }
+
+  /* Theme toggle — icon button in header chrome.
+     Half-filled circle indicates duality; rotates on click. */
+  /* Page toggle — chrome treatment for the page-toggle control.
+     Two horizontal bars indicate page slots; active page filled with accent. */
+  .page-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    transition: color 200ms ease;
+  }
+  .page-toggle:hover { color: var(--text); }
+  .page-toggle svg { width: 13px; height: 14px; display: block; }
+  .page-toggle .slot { fill: currentColor; opacity: 0.3; transition: opacity 200ms ease; }
+  .page-toggle .slot.active { fill: var(--accent); opacity: 1; }
+
+  /* Mono register is Regular 400 across both themes per §6.7 — the
+     earlier per-surface light-mode bump to 500 is deprecated. */
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .time-block {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+  }
+  .time-block .time {
+    font-size: 18px;
+    font-weight: 400;            /* §6.7 mono regular */
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+  .time-block .date {
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  /* ============================================
+     PAGES SYSTEM — body slides between full-screen pages
+     Header and ticker stay fixed; only the .pages-viewport contents move.
+     ============================================ */
+  .pages-viewport {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    position: relative;
+  }
+  .pages-track {
+    width: 200%;
+    height: 100%;
+    display: flex;
+    transform: translateX(0);
+    transition: transform 900ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .pages-track.page-1 { transform: translateX(-50%); }
+  .page {
+    width: 50%;
+    flex-shrink: 0;
+    height: 100%;
+  }
+
+  /* ============================================
+     MAIN GRID — base settings shared by both pages.
+     Page-specific grid templates are set by the modifier classes below.
+     ============================================ */
+  .d-main {
+    display: grid;
+    gap: 24px;
+    padding: 32px 48px;
+    min-height: 0;
+  }
+
+  /* Page 1 — 60/40 horizontal split, single row (tracker + globe) */
+  .d-main--split {
+    grid-template-columns: 60fr 40fr;
+    grid-template-rows: 1fr;
+  }
+
+  /* ============================================
+     PAGE 3 — PROJECT DETAIL (DFW Material Testing Lab)
+     Three panels per §7.1: Project Detail (hero numeral) and Project
+     Info (title + body + stat callouts) split the top row 50/50;
+     Speed-to-Print timeline panel spans the full bottom row.
+     Timeline uses §6.10 live-register motion: comet-tail gradient
+     fills on entry, milestones cascade in, terminal node pulses
+     (matches the Austin/Miami radar bloop vocabulary).
+     ============================================ */
+  .d-main--project {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .cell.project-detail  { grid-column: 1; grid-row: 1; }
+  .cell.project-info    { grid-column: 2; grid-row: 1; }
+  .cell.project-timeline-cell { grid-column: 1 / span 2; grid-row: 2; }
+
+  /* ── Project Detail panel — speed-to-print metric on the left,
+     phase chips showing build progression on the right. The whole
+     group is centered horizontally inside the panel. ── */
+  .project-hero-num {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    min-height: 0;
+  }
+  .hero-num-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  /* Phase progression — grouped into Design / Build / Finish rows.
+     Container is content-sized so the parent can center it. */
+  .phase-chips {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .phase-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .phase-group-label {
+    flex-shrink: 0;
+    width: 60px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    text-align: right;
+  }
+  .phase-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Phase chip — own vocabulary distinct from the globe pill chips.
+     `.complete` = solid accent fill (filled like §6.9 status-on);
+     `.pending` = outlined and muted so unfinished phases recede.
+     `.leading` = the most-recent completed phase, which pulses to
+     mark the current edge of progress (radar-bloop vocabulary). */
+  .phase-chip {
+    position: relative;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 11px 18px;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+    /* Entrance cascade — stagger driven by inline `--d` per chip. */
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 380ms ease var(--d, 0s),
+      transform 480ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s);
+  }
+  .project-detail.fill-active .phase-chip {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .phase-chip.complete {
+    background: var(--g20);
+    color: var(--g60);
+    border: 1px solid var(--g20);
+  }
+  /* Light mode invert — G20 reads as a hard dark pill on white panels;
+     flip to G80 bg + G30 text to stay in register with surrounding chrome. */
+  body:not(.dark) .phase-chip.complete {
+    background: var(--g80);
+    color: var(--g30);
+    border-color: var(--g80);
+  }
+  .phase-chip.pending {
+    background: transparent;
+    color: var(--text-subtle);
+    border: 1px solid var(--rule-interior);
+  }
+  /* Leading phase = the current edge of progress. Color shifts to
+     status-green per brand §4 to read as "active/on track" rather
+     than just another completed step. */
+  .phase-chip.leading {
+    background: var(--status-on);
+    color: var(--g10);
+    border-color: var(--status-on);
+  }
+  .project-detail.fill-active .phase-chip.leading {
+    animation: phase-leading-pulse 2s ease-out infinite;
+    animation-delay: calc(var(--d, 0s) + 600ms);
+  }
+  @keyframes phase-leading-pulse {
+    0%   { box-shadow: 0 0 0 0   rgba(74, 222, 128, 0.55); }
+    70%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
+  }
+  /* §6.1 Display tier — 120px Heavy 800 at -0.04em. */
+  .hero-num {
+    font-family: var(--display);
+    font-size: 120px;
+    font-weight: 800;
+    line-height: 0.84;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .hero-unit {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  body:not(.dark) .hero-unit { font-weight: 500; }
+  .hero-caption {
+    font-family: var(--body);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--text-subtle);
+    margin-top: 16px;
+    max-width: 32ch;
+  }
+
+  /* ── Project Info panel — split into 2 columns: title + body
+     stacked on the left, stats stacked vertically on the right. ── */
+  .project-hero-frame {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 48px;
+    min-height: 0;
+    min-width: 0;
+  }
+  .project-info-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+    min-width: 0;
+  }
+  /* §6.1 Heading tier — 40px Bold 700 at -0.02em. Sized to 42px to
+     pair visually with the .okr-title on Page 1 without competing
+     with the 256px countdown numeral for focal weight. */
+  .project-title {
+    font-family: var(--display);
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  /* §6.1 Lead tier (24-28px) — §6.4 0 to -0.01em tracking,
+     §6.5 body family with default 0 spacing. */
+  .project-subtitle {
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.85;
+    color: var(--text-muted);
+    max-width: 60ch;
+  }
+
+  /* ── Stat callouts — §7.4 callout pattern: panel-on-panel surface
+       bump + accent stripe on the leading edge. Three inline cards. ── */
+  .project-stats {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-content: center;
+    min-width: 0;
+  }
+  .project-stat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 20px 20px 24px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  body:not(.dark) .project-stat { background: rgba(0, 0, 0, 0.04); }
+  .project-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .project-stat-num {
+    font-family: var(--display);
+    font-size: 40px;
+    font-weight: 700;        /* §7.6 stat-row figure Bold */
+    line-height: 0.95;
+    color: var(--text);
+    letter-spacing: -0.02em; /* §6.1 Heading tier */
+    flex-shrink: 0;
+  }
+  .project-stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* ── Timeline panel — fills the bottom row ── */
+  .timeline-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Track splits into two stacked rows: chart (top) holds the
+     staircase + gradient + dots + phase guides; axis (bottom) holds
+     each milestone's label stack. Labels never overlap the graph. */
+  .timeline-track {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    margin: 0 56px;
+    display: flex;
+    flex-direction: column;
+  }
+  .timeline-chart {
+    position: relative;
+    flex: 64 1 0;
+    min-height: 0;
+  }
+  .timeline-axis {
+    position: relative;
+    flex: 36 1 0;
+    min-height: 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule-interior);
+  }
+
+  /* SVG chart layer — staircase line with area-under-line gradient.
+     preserveAspectRatio="none" + non-scaling-stroke lets the path
+     stretch with the panel while the stroke stays a clean 2px.
+     Clip-path reveals left-to-right on page entry.
+     z-index ramp: chart-svg (0) → phase guides (1) → markers (3). */
+  .timeline-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .timeline-section.fill-active .timeline-svg {
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* Phase bands — vertical chart-region dividers within the chart row.
+     Label sits at the top of the chart area. */
+  .phase-band {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .phase-band:not(:first-child) {
+    border-left: 1px solid var(--rule-interior);
+  }
+  .phase-band-label {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Marker = dot at the chart point. Sits inside .timeline-chart at
+     `left: pos%; bottom: y%`. Each marker is a 0×0 box with the dot
+     centered on its origin via translate(-50%, -50%). */
+  .timeline-marker {
+    position: absolute;
+    width: 0;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 400ms ease, transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 3;
+  }
+  .timeline-section.fill-active .timeline-marker {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .timeline-dot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--bg-panel);
+  }
+  .timeline-marker.terminal .timeline-dot {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 0 3px var(--bg-panel),
+                0 0 12px rgba(255, 79, 0, 0.7);
+  }
+  .timeline-marker.terminal .timeline-dot::after,
+  .timeline-marker.terminal .timeline-dot::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    opacity: 0;
+  }
+  .timeline-section.fill-active .timeline-marker.terminal .timeline-dot::after {
+    animation: timeline-bloop 2s ease-out 1.6s infinite;
+  }
+  .timeline-section.fill-active .timeline-marker.terminal .timeline-dot::before {
+    animation: timeline-bloop 2s ease-out 2.8s infinite;
+  }
+  @keyframes timeline-bloop {
+    0%   { transform: scale(0.6); opacity: 0.7; }
+    100% { transform: scale(3.4); opacity: 0; }
+  }
+
+  /* Stack = label block in the axis row, anchored to its milestone's
+     x position. Mid stacks are centered on the x; edge stacks
+     (first/last) align to the track edges so they don't clip. */
+  .timeline-stack {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: max-content;
+    max-width: 180px;
+    text-align: left;
+    align-items: flex-start;
+    transform: translateX(0);
+    opacity: 0;
+    transition: opacity 480ms ease;
+  }
+  .timeline-section.fill-active .timeline-stack { opacity: 1; }
+  /* Last milestone (Feb 2026) sits at pos:100% — anchor its text
+     to the right edge so it doesn't overflow the chart. */
+  .timeline-stack[data-edge="end"] {
+    transform: translateX(-100%);
+  }
+  .timeline-stack .timeline-date {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .timeline-stack .timeline-label {
+    font-family: var(--body);   /* §6.5 body register at small sizes */
+    font-size: 16px;
+    font-weight: 500;            /* §6.1 Subhead Medium */
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .timeline-stack .timeline-cap {
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--text-subtle);
+    line-height: 1.35;
+  }
+
+  /* Globe stage on Page 2 — new chip-overlay design: chip columns flank
+     the globe canvas absolutely; tethered bezier curves draw chip→pin. */
+  .d-main--split .globe-stage {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    margin: 0;
+    --grid-color: rgba(255, 255, 255, 0.07);
+  }
+  body:not(.dark) .d-main--split .globe-stage {
+    --grid-color: rgba(0, 0, 0, 0.06);
+  }
+  .d-main--split .globe-stage canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+  }
+
+  .cell.globe-panel {
+    justify-content: stretch;
+    background: transparent;
+  }
+  .globe-panel .cell-head {
+    justify-content: flex-start;
+  }
+
+  /* Chip columns — flank the globe at left/right inside the stage.
+     Stretch full stage height and flex-center children so offsetTop
+     reports real layout positions (transform: translateY would not). */
+  .chip-col {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .chip-col[data-side="left"]  { left: 22px;  align-items: flex-start; }
+  .chip-col[data-side="right"] { right: 22px; align-items: flex-end;  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;            /* §6.7 mono regular */
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border: 1px solid;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+    backdrop-filter: blur(2px);
+  }
+  [data-theme="night"] .chip {
+    color: #fff;
+    border-color: rgba(255,255,255,0.32);
+    background: rgba(0,0,0,0.65);
+  }
+  [data-theme="day"] .chip {
+    color: #1a1a1a;
+    border-color: rgba(26,26,26,0.32);
+    background: rgba(255,255,255,0.7);
+  }
+  .chip .pip {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 7px;
+    transform: translateY(-1px);
+  }
+
+  /* Zone clocks — 4 small clocks at the bottom margin of the globe panel.
+     Each clock represents a US time zone where ICON has print activity. */
+  .zone-clocks {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule-interior);
+    margin-top: auto;  /* push to bottom of panel */
+  }
+  .zone-clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-clock svg {
+    width: 88px;
+    height: 88px;
+    display: block;
+  }
+  .zone-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 400;            /* §6.7 mono regular */
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* ============================================
+     SWIM LANE CHART — Project Tracker (Page 2)
+     Continuous flow lines: each project is a single horizontal line from
+     start to current progress, terminating in a pulsing leading-edge dot.
+     Phase columns are subtle vertical guides the line crosses through.
+     --p (project progress, 0-100%) drives both line width and dot position.
+     --d (animation delay) staggers the cascade.
+     ============================================ */
+  .swim-grid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-top: 12px;
+    overflow: hidden;
+  }
+
+  .swim-row.swim-header {
+    display: grid;
+    grid-template-columns: 140px repeat(12, 1fr);
+    flex: 0 0 auto;
+    align-items: end;
+  }
+  .swim-header > * {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 400;            /* §6.7 mono regular */
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    padding-bottom: 8px;
+    align-self: end;
+  }
+  .swim-header > *:not(:first-child) {
+    border-bottom: 1px solid var(--rule-interior);
+  }
+
+  .swim-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    flex: 1;
+    min-height: 0;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .swim-name {
+    font-family: var(--body);
+    font-size: 16px;
+    font-weight: 500;        /* §6.1 Subhead Medium — working-register label */
+    color: var(--text);
+    padding-right: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self: center;
+  }
+
+  /* Body wrapper — flexbox column to share remaining height across rows.
+     Its single .phase-guides child draws all vertical guides as one
+     overlay so they share the parent's exact pixel calc with the header. */
+  .swim-body {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Single guides overlay — vertical hairlines at every 1/12 of the body
+     area's width. Positioned left:140px to start exactly where the header's
+     phase columns start, so the math always matches. */
+  .phase-guides {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 140px;
+    right: 0;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--rule-interior) 0,
+      var(--rule-interior) 1px,
+      transparent 1px,
+      transparent calc(100% / 12)
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Line area — just a positioning context for line + leading dot.
+     Guides are drawn by .phase-guides overlay above, not here. */
+  .swim-line-area {
+    position: relative;
+    height: 100%;
+  }
+
+  /* The flow line itself — gradient from faint (start) to full (leading edge),
+     creating a comet-tail trajectory feel. Width animates 0 → var(--p). */
+  .swim-line {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 2px;
+    width: 0;
+    background: linear-gradient(to right,
+      rgba(255, 79, 0, 0.10),
+      rgba(255, 79, 0, 1.0));
+    transform: translateY(-50%);
+    border-radius: 1px;
+  }
+
+  /* Leading-edge dot — sits at the end of the line, glows softly,
+     pulses periodically like the radar bloop on the globe. */
+  .swim-leading {
+    position: absolute;
+    top: 50%;
+    left: var(--p, 0%);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    box-shadow: 0 0 6px rgba(255, 79, 0, 0.5);
+  }
+
+  /* Cascade animations — fire when .swim-grid.fill-active is set on Page 2 entry */
+  .swim-grid.fill-active .swim-line {
+    animation: swim-line-fill 1100ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) forwards;
+  }
+  .swim-grid.fill-active .swim-leading {
+    animation:
+      swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards,
+      swim-leading-pulse 2s ease-out calc(var(--d, 0s) + 1.4s) infinite;
+  }
+  @keyframes swim-line-fill {
+    from { width: 0; }
+    to   { width: var(--p, 0%); }
+  }
+  @keyframes swim-leading-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes swim-leading-pulse {
+    0%   { box-shadow: 0 0 0 0   rgba(255, 79, 0, 0.55), 0 0 6px rgba(255, 79, 0, 0.5); }
+    70%  { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0),    0 0 6px rgba(255, 79, 0, 0.5); }
+    100% { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0),    0 0 6px rgba(255, 79, 0, 0.5); }
+  }
+
+  .cell {
+    background: var(--bg-panel);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    border-radius: 6px;
+  }
+
+  .cell-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule-interior);
+    margin-bottom: 16px;
+    flex-shrink: 0;
+    gap: 16px;
+    min-height: 24px;
+  }
+
+  .cell-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .cell-meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+  }
+
+  /* ============================================
+     STATS TICKER
+     ============================================ */
+  .ticker {
+    height: 80px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    margin: 0 48px 32px;
+  }
+  .ticker-window {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+  }
+  .ticker-track {
+    display: flex;
+    align-items: center;
+    gap: 96px;
+    white-space: nowrap;
+    animation: ticker-scroll 50s linear infinite;
+    padding-left: 96px;
+  }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .ticker-item .ticker-num {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 700;           /* §6.1 Heading MD Bold */
+    color: var(--text);
+    letter-spacing: -0.02em;    /* §6.1 Heading tier */
+  }
+
+  /* ============================================
+     ROW ENTRANCE — fade up with cascade
+     Applies to OKR items (replays each rotation)
+     and KPI rows (single play on load)
+     ============================================ */
+  @keyframes rowFadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .okr-item,
+  .kpi-table tbody tr {
+    opacity: 0;
+    animation: rowFadeUp 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .okr-item:nth-child(1),
+  .kpi-table tbody tr:nth-child(1) { animation-delay: 0ms;   }
+  .okr-item:nth-child(2),
+  .kpi-table tbody tr:nth-child(2) { animation-delay: 60ms;  }
+  .okr-item:nth-child(3),
+  .kpi-table tbody tr:nth-child(3) { animation-delay: 120ms; }
+  .okr-item:nth-child(4),
+  .kpi-table tbody tr:nth-child(4) { animation-delay: 180ms; }
+  .okr-item:nth-child(5),
+  .kpi-table tbody tr:nth-child(5) { animation-delay: 240ms; }
+  .okr-item:nth-child(6),
+  .kpi-table tbody tr:nth-child(6) { animation-delay: 300ms; }
+  .okr-item:nth-child(7),
+  .kpi-table tbody tr:nth-child(7) { animation-delay: 360ms; }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="d-header">
+    <div class="h-left">
+      <div class="icon-wordmark" id="wordmark"></div>
+      <div class="header-meta">
+        <span class="eyebrow">Dashboard · Q1 2026</span>
+      </div>
+    </div>
+    <div class="h-right">
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        <span>Live</span>
+      </div>
+      <div class="time-block">
+        <span class="time" id="clock">—</span>
+        <span class="date" id="date">—</span>
+      </div>
+      <button class="page-toggle" id="page-toggle" aria-label="Toggle page">
+        <svg viewBox="0 0 13 14" xmlns="http://www.w3.org/2000/svg">
+          <rect class="slot active" id="page-slot-0" x="0" y="4" width="6" height="6" rx="2"/>
+          <rect class="slot" id="page-slot-1" x="7" y="4" width="6" height="6" rx="2"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================== MAIN GRID ===================== -->
+  <div class="pages-viewport">
+    <div class="pages-track" id="pages-track">
+
+  <main class="d-main d-main--split page" data-page="0">
+    <section class="cell tracker-panel">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Project Tracker</span>
+        <span class="cell-meta" id="tracker-count">— Active</span>
+      </header>
+      <div class="swim-grid" id="swim-grid"></div>
+    </section>
+
+    <section class="cell globe-panel">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Print Network</span>
+        <span class="cell-meta">9 Active Sites</span>
+      </header>
+      <div class="globe-stage" data-theme="night">
+        <div class="chip-col" data-side="left"  data-chip-col="left"></div>
+        <div class="chip-col" data-side="right" data-chip-col="right"></div>
+        <canvas class="globe"></canvas>
+      </div>
+      <div class="zone-clocks" id="zone-clocks"></div>
+    </section>
+  </main>
+
+  <main class="d-main d-main--project page" data-page="1">
+
+    <!-- PROJECT DETAIL — hero numeral focal moment -->
+    <section class="cell project-detail">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Project Detail</span>
+        <span class="cell-meta">Speed to Print</span>
+      </header>
+      <div class="project-hero-num">
+        <div class="hero-num-stack">
+          <div class="hero-num">9</div>
+          <div class="hero-unit">Months</div>
+        </div>
+        <div class="phase-chips" id="phase-chips"></div>
+      </div>
+    </section>
+
+    <!-- PROJECT INFO — title, copy, supporting stats -->
+    <section class="cell project-info">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Project Info</span>
+        <span class="cell-meta">Dallas, TX · Print Phase Complete</span>
+      </header>
+      <div class="project-hero-frame">
+        <div class="project-info-left">
+          <h1 class="project-title">DFW Material Testing Lab</h1>
+          <p class="project-subtitle">First-of-its-kind printed-concrete validation facility supporting ASTM-grade aggregate and additive testing for the Titan and Olympus programs. Print path optimized over nine revisions from Schematic Design through Open Nozzle.</p>
+        </div>
+        <div class="project-stats" id="project-stats"></div>
+      </div>
+    </section>
+
+    <!-- SPEED-TO-PRINT TIMELINE — full row -->
+    <section class="cell project-timeline-cell">
+      <header class="cell-head">
+        <span class="cell-eyebrow">Speed-to-Print Timeline</span>
+        <span class="cell-meta">Schematic Design → Open Nozzle</span>
+      </header>
+      <div class="timeline-section" id="timeline-section">
+        <div class="timeline-track" id="timeline-track"></div>
+      </div>
+    </section>
+
+  </main>
+
+    </div>
+  </div>
+
+  <!-- ===================== TICKER ===================== -->
+  <div class="ticker">
+    <div class="ticker-window">
+      <div class="ticker-track" id="ticker-track"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ============================================
+  // FIT DASHBOARD TO VIEWPORT
+  // Replaces the broken `zoom: min(calc(...))` approach. transform: scale
+  // works reliably across browsers; transform-origin is centered so flex
+  // centering on body keeps the dashboard's visual center on the
+  // viewport's center regardless of scale factor.
+  // ============================================
+  function fitDashboard() {
+    const dash = document.querySelector('.dashboard');
+    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    dash.style.transform = `scale(${scale})`;
+  }
+  fitDashboard();
+  window.addEventListener('resize', fitDashboard);
+
+  // ============================================
+  // ICON Wordmark — paths from ICON-BRAND.md §1
+  // ============================================
+  const wordmarkSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 425.19" aria-label="ICON">
+    <g fill="currentColor">
+      <path d="M399.92,112.07c31.31,0,56.11-24.63,56.2-55.82C456.21,25.49,431.28.03,401.05,0c-31.87-.03-57.01,24.6-57.08,55.91-.07,31.16,24.82,56.15,55.94,56.16Z"/>
+      <path d="M403.31,141.36c-79.97-1.79-145.13,62.68-145.24,140.92-.11,79.63,62.79,142.9,141.87,142.9,78.85,0,141.86-63.08,142.07-141.83.2-76.84-61.68-140.27-138.7-141.99ZM400.05,341.68c-32.22,0-58.53-26.31-58.46-58.43.07-32.09,26.6-58.5,58.64-58.36,31.92.13,58.11,26.38,58.21,58.32.09,32.1-26.25,58.48-58.38,58.47Z"/>
+      <path d="M783.96,226.21c-27.03-48.82-68.62-74.81-124.61-76.23-32.15-.81-64.35-.15-96.52-.15h-4.88v267.11h83.19v-183.74c5.29,0,10.13-.05,14.96.01,10.45.13,20.53,1.99,29.68,7.28,20.8,12.01,30.72,30.3,30.74,54.1.04,39.11,0,78.21,0,117.32v5.04h83.45v-5.17c0-39.94-.11-79.88.02-119.83.08-23.28-4.79-45.44-16.04-65.75Z"/>
+      <path d="M183.9,284.49c-.72-27.59,20.47-58.55,58.07-60.31v-82.72c-38.56-1.41-92.58,18.51-122.91,71.03-28.18,48.81-24.56,111.01,9.98,156.01,28.35,36.94,66.31,55.33,113.1,56.63v-83.27c-37.81-2.11-57.56-31.66-58.24-57.37Z"/>
+      <path d="M0,416.59h82.77V149.93H0v266.65Z"/>
+    </g>
+  </svg>`;
+  document.getElementById('wordmark').innerHTML = wordmarkSVG;
+
+  // ============================================
+  // LIVE CLOCK
+  // ============================================
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const hr12 = ((h + 11) % 12) + 1;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    document.getElementById('clock').textContent =
+      `${hr12}:${m.toString().padStart(2,'0')} ${ampm}`;
+
+    const date = now.toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+    });
+    document.getElementById('date').textContent = date.toUpperCase();
+  }
+
+
+  // ============================================
+  // PROJECT DETAIL — DFW Material Testing Lab
+  // Stats and Speed-to-Print timeline. Milestone dates sourced from the
+  // "Design-to-Print Timeline - DFW MTL" deck and the dated revisions
+  // of the "DFW-MTL_ICON PRINT PATH SHOPS" PDF series in Drive.
+  // ============================================
+  const projectStats = [
+    { num: '9',    label: 'Print Path Revisions' },
+    { num: '100%', label: 'Print Phase Complete' },
+    { num: '4',    label: 'BIM Model Handoffs' }
+  ];
+
+  // Phase bands — three editorial zones that contextualize the milestone
+  // sequence. Bounds are % of the timeline track, aligned to fall
+  // between adjacent milestone positions in the even-spaced layout.
+  const projectPhases = [
+    { label: 'Design',         from: 0,  to: 42 },
+    { label: 'Documentation',  from: 42, to: 92 },
+    { label: 'Print',          from: 92, to: 100 }
+  ];
+
+  // pos     = x along the timeline, distributed evenly across the
+  //           track so the milestones read with consistent rhythm
+  //           rather than clumping by calendar gap.
+  // y       = chart elevation (0-100, % of track height) — quantized
+  //           to print-path version levels so each release is a step
+  //           up to a new plateau (right-step / staircase pattern).
+  // version = print path version label, used for the engineering-
+  //           register read alongside the milestone name.
+  const projectTimeline = [
+    { date: 'Apr 2025', label: 'Project Kickoff',      cap: 'BIM kickoff · Schematic Design',         version: 'v0',   pos: 0,     y: 8  },
+    { date: 'Jul 2025', label: 'Design-to-Print Plan', cap: 'Print path strategy established',         version: 'v1.0', pos: 16.67, y: 22 },
+    { date: 'Aug 2025', label: 'Detail Tracker',       cap: 'Print Path & Detail Tracker live',        version: 'v1.5', pos: 33.33, y: 32 },
+    { date: 'Oct 2025', label: 'Shop Drawings v2.1',   cap: 'Print Path Shops issued',                 version: 'v2.1', pos: 50,    y: 50 },
+    { date: 'Dec 2025', label: 'Print Path v3.0',      cap: 'Approved for procurement · BOM issued',   version: 'v3.0', pos: 66.67, y: 68 },
+    { date: 'Jan 2026', label: 'Print Path v3.9',      cap: 'Final review prior<br>to nozzle',         version: 'v3.9', pos: 83.33, y: 80 },
+    { date: 'Feb 2026', label: 'Open Nozzle',          cap: 'Print phase complete',                    version: 'v4.0', pos: 100,   y: 88, terminal: true }
+  ];
+
+  // Right-step (staircase) SVG path. Each milestone marks the moment
+  // the version jumps; segments plateau at the previous y until the
+  // next milestone's x, then rise vertically to the new y.
+  function buildTimelineSvg(points, viewW, viewH) {
+    if (!points.length) return { lineD: '', areaD: '' };
+    const toSvg = p => ({
+      x: (p.pos / 100) * viewW,
+      y: viewH - (p.y / 100) * viewH
+    });
+    const sp = points.map(toSvg);
+    let lineD = `M ${sp[0].x.toFixed(2)} ${sp[0].y.toFixed(2)}`;
+    for (let i = 1; i < sp.length; i++) {
+      const a = sp[i - 1], b = sp[i];
+      // Plateau at a.y until x = b.x, then riser up to b.y.
+      lineD += ` L ${b.x.toFixed(2)} ${a.y.toFixed(2)} L ${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
+    }
+    const lastX = sp[sp.length - 1].x;
+    const firstX = sp[0].x;
+    const areaD = `${lineD} L ${lastX.toFixed(2)} ${viewH} L ${firstX.toFixed(2)} ${viewH} Z`;
+    return { lineD, areaD };
+  }
+
+  // Build phase progression chips from the canonical swim-chart data
+  // so the Project Detail and Project Tracker panels stay in lockstep.
+  // Phases are grouped into Design / Build / Finish rows with a
+  // connector hairline so the sequence reads as a stepper. Complete
+  // phases get the filled accent treatment; the most recent completed
+  // phase pulses as the leading edge of progress.
+  const PHASE_CHIP_LABELS = [
+    'Concept', 'SD', 'DD', 'CD',
+    'Sitework', 'Foundation', 'Print Prep', 'Print',
+    'Envelope', 'Interior+MEP', 'Finishes', 'Delivery'
+  ];
+  const PHASE_GROUPS = [
+    { label: 'Design', range: [0, 4]  },
+    { label: 'Build',  range: [4, 8]  },
+    { label: 'Finish', range: [8, 12] }
+  ];
+  function renderPhaseChips() {
+    const dfw = swimProjects.find(p => p.name === 'DFW Lab');
+    if (!dfw) return;
+    const container = document.getElementById('phase-chips');
+
+    // Leading-edge phase = highest index that is fully complete.
+    let leadingIdx = -1;
+    dfw.phases.forEach((pct, i) => { if (pct >= 100) leadingIdx = i; });
+
+    let chipCount = 0;
+    container.innerHTML = PHASE_GROUPS.map(group => {
+      const chips = dfw.phases.slice(group.range[0], group.range[1]).map((pct, gi) => {
+        const i = group.range[0] + gi;
+        const cls = pct >= 100 ? 'complete' : 'pending';
+        const leading = i === leadingIdx ? ' leading' : '';
+        const delay = chipCount * 70;
+        chipCount++;
+        return `<div class="phase-chip ${cls}${leading}" style="--d: ${delay}ms">${PHASE_CHIP_LABELS[i]}</div>`;
+      }).join('');
+      return `
+        <div class="phase-group">
+          <div class="phase-group-label">${group.label}</div>
+          <div class="phase-row">${chips}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Trigger the chip cascade — fires on every Page 3 entry so the
+  // entrance plays fresh each cycle (matches animateTimeline pattern).
+  function animateProjectDetail() {
+    const cell = document.querySelector('.project-detail');
+    if (!cell) return;
+    cell.classList.remove('fill-active');
+    void cell.offsetWidth;  // force reflow so the animation restarts
+    cell.classList.add('fill-active');
+  }
+
+  function renderProjectDetail() {
+    const stats = document.getElementById('project-stats');
+    stats.innerHTML = projectStats.map(s => `
+      <div class="project-stat">
+        <div class="project-stat-num">${s.num}</div>
+        <div class="project-stat-label">${s.label}</div>
+      </div>
+    `).join('');
+    renderPhaseChips();
+
+    const track = document.getElementById('timeline-track');
+
+    // Phase bands — live in the chart row (vertical region dividers).
+    const phases = projectPhases.map(ph => `
+      <div class="phase-band" style="left: ${ph.from}%; width: ${ph.to - ph.from}%;">
+        <div class="phase-band-label">${ph.label}</div>
+      </div>
+    `).join('');
+
+    // Markers (dots at chart point) — also in the chart row.
+    const markers = projectTimeline.map((m, i) => {
+      const delay = 1100 + i * 120;
+      return `
+        <div class="timeline-marker ${m.terminal ? 'terminal' : ''}"
+             style="left: ${m.pos}%; bottom: ${m.y}%; transition-delay: ${delay}ms;">
+          <div class="timeline-dot"></div>
+        </div>
+      `;
+    }).join('');
+
+    // Label stacks (date / name / cap) — live in the axis row below
+    // the chart so they never overlap the graph visual.
+    const stacks = projectTimeline.map((m, i) => {
+      const edge = i === 0 ? 'start' : i === projectTimeline.length - 1 ? 'end' : 'mid';
+      const delay = 1300 + i * 120;
+      return `
+        <div class="timeline-stack"
+             data-edge="${edge}"
+             style="left: ${m.pos}%; transition-delay: ${delay}ms;">
+          <div class="timeline-date">${m.date}</div>
+          <div class="timeline-cap">${m.cap}</div>
+        </div>
+      `;
+    }).join('');
+
+    // SVG chart: staircase line + area fill. viewBox 1000×100 with
+    // preserveAspectRatio="none" lets the path stretch to the panel
+    // while non-scaling-stroke keeps the line a clean 2px.
+    const VW = 1000, VH = 100;
+    const { lineD, areaD } = buildTimelineSvg(projectTimeline, VW, VH);
+    const svg = `
+      <svg class="timeline-svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="tl-stroke" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#FF4F00" stop-opacity="0.10"/>
+            <stop offset="1" stop-color="#FF4F00" stop-opacity="1.00"/>
+          </linearGradient>
+          <linearGradient id="tl-area" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0"    stop-color="#FF4F00" stop-opacity="0.40"/>
+            <stop offset="0.55" stop-color="#FF4F00" stop-opacity="0.10"/>
+            <stop offset="1"    stop-color="#FF4F00" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${areaD}" fill="url(#tl-area)"/>
+        <path d="${lineD}"
+              stroke="url(#tl-stroke)"
+              stroke-width="2"
+              fill="none"
+              vector-effect="non-scaling-stroke"
+              stroke-linecap="round"
+              stroke-linejoin="round"/>
+      </svg>
+    `;
+
+    track.innerHTML = `
+      <div class="timeline-chart">${svg}${phases}${markers}</div>
+      <div class="timeline-axis">${stacks}</div>
+    `;
+  }
+
+  // Trigger the timeline entrance — gradient line fills, milestones cascade
+  // in, terminal node begins its radar pulse. Re-render strips the class so
+  // the next page entry replays the moment fresh.
+  function animateTimeline() {
+    const section = document.getElementById('timeline-section');
+    if (!section) return;
+    section.classList.remove('fill-active');
+    void section.offsetWidth;  // force reflow so the animation restarts
+    section.classList.add('fill-active');
+  }
+
+  // ============================================
+  // STATS TICKER (continuous scroll, duplicated for seamless loop)
+  // ============================================
+  const stats = [
+    { num: '118', label: 'Homes Sold' },
+    { num: '342', label: 'People Housed' },
+    { num: '230', label: 'Structures Built' },
+    { num: '464', label: 'Active Personnel' },
+    { num: '10',  label: 'Deployed Printers' },
+    { num: '12',  label: 'Active Job Sites' }
+  ];
+
+  function renderTicker() {
+    const items = stats.map(s => `
+      <div class="ticker-item">
+        <span class="ticker-num">${s.num}</span>
+        <span>${s.label}</span>
+      </div>
+    `).join('');
+
+    // Duplicate items so the scroll loop is seamless
+    document.getElementById('ticker-track').innerHTML = items + items;
+  }
+
+  // ============================================
+  // PROJECT TRACKER — swim lane chart (Page 2)
+  // Each project tracks progress across 12 phases:
+  //   4 main: Concept, SD, Design Development, Construction Documentation
+  //   8 Build sub-phases: Sitework, Foundation, Print-Prep, Print,
+  //                       Envelope, Interior + MEP, Finishes, Delivery
+  // Each phases[] entry is 0-100 (percentage complete).
+  // ============================================
+  const swimPhases = [
+    'Concept', 'SD', 'DD', 'CD',
+    'Site', 'Found', 'Prep', 'Print',
+    'Env', 'I+M', 'Fin', 'Del'
+  ];
+
+  // Locations are shown via brand-orange chips, pips, and bezier tethers —
+  // no per-location color encoding. See ICON-BRAND.md §1 (single accent).
+
+  const swimProjects = [
+    { name: 'Disney',          phases: [100, 100, 100, 100, 100, 100,  60,   0,   0,   0,   0,   0], location: 'Ft Lauderdale' },
+    { name: 'Waco Surf',       phases: [100,  20,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Waco' },
+    { name: 'Convergence',     phases: [100, 100,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Memphis' },
+    { name: 'CAT Bldg',        phases: [100, 100,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Peoria' },
+    { name: 'St Marks Church', phases: [100, 100,  50,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Austin' },
+    { name: 'ISU Fema',        phases: [100, 100, 100,   0,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Ames' },
+    { name: '600 Kemp',        phases: [100, 100, 100,   5,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Austin' },
+    { name: 'ASCO Pavilion',   phases: [100, 100, 100,  85,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Austin' },
+    { name: 'Perch',           phases: [100, 100, 100, 100,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Austin' },
+    { name: 'Bliss',           phases: [100, 100, 100, 100, 100, 100, 100,  70,   0,   0,   0,   0], location: 'Fort Bliss' },
+    { name: 'Eden Village',    phases: [100, 100, 100, 100,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Wilmington' },
+    { name: 'SOLFL',           phases: [100, 100, 100, 100,   0,   0,   0,   0,   0,   0,   0,   0], location: 'Miami' },
+    { name: 'DFW Lab',         phases: [100, 100, 100, 100, 100, 100, 100, 100,   0,   0,   0,   0], location: 'Dallas' },
+    { name: 'CFV Tranche 2',   phases: [100, 100, 100, 100, 100,  50,  40,   0,   0,   0,   0,   0], location: 'Austin' },
+    { name: 'CFV i99',         phases: [100, 100, 100, 100, 100, 100, 100, 100, 100,  70,   0,   0], location: 'Austin' },
+    { name: 'Mueller',         phases: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,  50], location: 'Austin' },
+    { name: 'CFV Tranche 1',   phases: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,  50], location: 'Austin' }
+  ];
+
+  function renderTracker() {
+    const grid = document.getElementById('swim-grid');
+
+    // Header row — project label cell empty, then 12 phase labels
+    let html = '<div class="swim-row swim-header">';
+    html += '<div></div>';
+    swimPhases.forEach(label => {
+      html += `<div>${label}</div>`;
+    });
+    html += '</div>';
+
+    // Sort by progress ascending — least-complete top, most-complete bottom.
+    // Cache totalPct so we don't recompute downstream.
+    const sortedProjects = swimProjects
+      .map(p => ({ ...p, _totalPct: p.phases.reduce((s, v) => s + v, 0) }))
+      .sort((a, b) => a._totalPct - b._totalPct);
+
+    // Body wrapper holds a single phase-guides overlay (drawn once, sub-pixel
+    // aligned with header columns) and all project rows underneath.
+    html += '<div class="swim-body">';
+    html += '<div class="phase-guides"></div>';
+
+    // Continuous flow lines — one per project, staggered fill cascade.
+    // Each line animates over 1.1s; rows stagger 100ms apart so the cascade
+    // sweeps top→bottom over ~3 seconds total before the leading dots appear.
+    const ROW_DELAY = 100;
+    sortedProjects.forEach((project, rowIdx) => {
+      const progress = project._totalPct / (project.phases.length * 100);
+      const pct = (progress * 100).toFixed(2);
+      const delay = (rowIdx * ROW_DELAY) / 1000;
+      html += `<div class="swim-row" style="--p: ${pct}%; --d: ${delay}s">`;
+      html +=   `<div class="swim-name">${project.name}</div>`;
+      html +=   `<div class="swim-line-area">`;
+      html +=     `<div class="swim-line"></div>`;
+      html +=     `<div class="swim-leading"></div>`;
+      html +=   `</div>`;
+      html += `</div>`;
+    });
+    html += '</div>';  // close .swim-body
+
+    grid.innerHTML = html;
+
+    const active = swimProjects.filter(p => !p.completed).length;
+    document.getElementById('tracker-count').textContent = `${active} Active`;
+  }
+
+  // Trigger sequential fill on Page 2 entry. Re-render strips the
+  // .fill-active class so the next entry starts fresh and animates again.
+  function animateTracker() {
+    const grid = document.getElementById('swim-grid');
+    if (!grid) return;
+    grid.classList.remove('fill-active');
+    // Force reflow so the animation restarts cleanly
+    void grid.offsetWidth;
+    grid.classList.add('fill-active');
+  }
+
+  // ============================================
+  // PAGE / OKR ROTATION ORCHESTRATION
+  //
+  // Cycle: Page 1 (project tracker + globe) holds for 2 full globe
+  // rotations (~96s), slides to Page 2 (project detail spotlight),
+  // holds 25s, returns to Page 1. Manual page-toggle in header
+  // interrupts the cycle and advances one page.
+  // ============================================
+  const PAGE_1_ROTATIONS = 2;       // full globe rotations on Page 1
+  const PAGE_2_DURATION  = 25_000;  // project-detail hold
+
+  // Compute Page 1 duration from current globe spin rate.
+  // Falls back to 30s if the globe IIFE hasn't initialized yet.
+  function getPage1Duration() {
+    const spinRate = window.__globeSpinRate;
+    if (!spinRate) return 30_000;
+    const rotationSeconds = (Math.PI * 2) / spinRate;
+    return rotationSeconds * 1000 * PAGE_1_ROTATIONS;
+  }
+
+  let currentPage = 0;
+  let pageTimer  = null;
+
+  function setPage(pageIndex) {
+    currentPage = pageIndex;
+    const track = document.getElementById('pages-track');
+    track.classList.toggle('page-1', currentPage === 1);
+
+    // Sync page-toggle button slot indicators
+    [0, 1].forEach(i => {
+      const slot = document.getElementById(`page-slot-${i}`);
+      if (slot) slot.classList.toggle('active', currentPage === i);
+    });
+  }
+
+  function startPage1() {
+    clearTimeout(pageTimer);
+    setPage(0);
+    animateTracker();
+    pageTimer = setTimeout(() => startPage2(), getPage1Duration());
+  }
+
+  function startPage2() {
+    clearTimeout(pageTimer);
+    setPage(1);
+    animateProjectDetail();
+    animateTimeline();
+    pageTimer = setTimeout(() => startPage1(), PAGE_2_DURATION);
+  }
+
+  // ============================================
+  // INIT + INTERVALS
+  // ============================================
+  updateClock();
+  renderTicker();
+  renderTracker();
+  renderProjectDetail();
+
+  setInterval(updateClock, 5_000);
+
+  startPage1();
+
+  // ============================================
+  // THEME — locked to dark mode.
+  // ============================================
+  document.body.classList.add('dark');
+  const globeEl = document.querySelector('.globe-stage');
+  if (globeEl) globeEl.setAttribute('data-theme', 'night');
+
+  // Manual page toggle — interrupts the auto-cycle and advances one page.
+  document.getElementById('page-toggle').addEventListener('click', () => {
+    if (currentPage === 0) startPage2();
+    else                   startPage1();
+  });
+
+  // ============================================
+  // ANALOG CLOCK
+  // ============================================
+  // ============================================
+  // ANALOG CLOCKS — main (local) + 4 time zones in globe panel
+  // ============================================
+  const ZONES = [
+    { tz: 'America/New_York',    label: 'NY' },
+    { tz: 'America/Chicago',     label: 'CHI' },
+    { tz: 'America/Denver',      label: 'DEN' },
+    { tz: 'America/Los_Angeles', label: 'LA' }
+  ];
+
+  // Build zone clock markup
+  (function buildZoneClocks() {
+    const container = document.getElementById('zone-clocks');
+    if (!container) return;
+    container.innerHTML = ZONES.map((z, i) => `
+      <div class="zone-clock" data-tz="${z.tz}">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle class="clock-face" cx="100" cy="100" r="78" />
+          <g class="clock-ticks"></g>
+          <line class="hand hour"   x1="100" y1="100" x2="100" y2="55" />
+          <line class="hand minute" x1="100" y1="100" x2="100" y2="32" />
+          <circle class="clock-pivot" cx="100" cy="100" r="2" />
+        </svg>
+        <div class="zone-label">${z.label}</div>
+      </div>
+    `).join('');
+  })();
+
+  // Build clock ticks for every clock on the page (main + zones)
+  (function buildAllClockTicks() {
+    document.querySelectorAll('.clock-ticks').forEach(g => {
+      let html = '';
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * 30 - 90) * Math.PI / 180;
+        const isCardinal = i % 3 === 0;
+        const inner = isCardinal ? 82 : 88;
+        const outer = 96;
+        const x1 = (100 + inner * Math.cos(angle)).toFixed(2);
+        const y1 = (100 + inner * Math.sin(angle)).toFixed(2);
+        const x2 = (100 + outer * Math.cos(angle)).toFixed(2);
+        const y2 = (100 + outer * Math.sin(angle)).toFixed(2);
+        html += `<line class="clock-tick${isCardinal ? ' cardinal' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`;
+      }
+      g.innerHTML = html;
+    });
+  })();
+
+  // Get hours/minutes/seconds for a given timezone string (or null for local)
+  function getTimeForZone(tz) {
+    const now = new Date();
+    if (!tz) {
+      return {
+        h: now.getHours(),
+        m: now.getMinutes(),
+        s: now.getSeconds() + now.getMilliseconds() / 1000
+      };
+    }
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false
+    }).formatToParts(now);
+    const find = type => parseInt(parts.find(p => p.type === type).value, 10);
+    return {
+      h: find('hour') % 24,
+      m: find('minute'),
+      s: find('second') + now.getMilliseconds() / 1000
+    };
+  }
+
+  // Animate every clock — main clock uses local time + second hand;
+  // zone clocks use their data-tz attribute, no second hand.
+  const mainClock = document.querySelector('.countdown-body .clock');
+  const zoneClockEls = document.querySelectorAll('.zone-clock');
+
+  function tickClock() {
+    // Main clock — local time, hour/minute/second
+    if (mainClock) {
+      const { h, m, s } = getTimeForZone(null);
+      const mFloat = m + s / 60;
+      const hFloat = (h % 12) + mFloat / 60;
+      mainClock.querySelector('.hand.hour').setAttribute('transform',   `rotate(${hFloat * 30} 100 100)`);
+      mainClock.querySelector('.hand.minute').setAttribute('transform', `rotate(${mFloat * 6} 100 100)`);
+      mainClock.querySelector('.hand.second').setAttribute('transform', `rotate(${s * 6} 100 100)`);
+    }
+
+    // Zone clocks — per-tz time, hour/minute only
+    zoneClockEls.forEach(clock => {
+      const { h, m } = getTimeForZone(clock.dataset.tz);
+      const hFloat = (h % 12) + m / 60;
+      clock.querySelector('.hand.hour').setAttribute('transform',   `rotate(${hFloat * 30} 100 100)`);
+      clock.querySelector('.hand.minute').setAttribute('transform', `rotate(${m * 6} 100 100)`);
+    });
+
+    requestAnimationFrame(tickClock);
+  }
+  requestAnimationFrame(tickClock);
+</script>
+
+<script>
+(() => {
+  // Active ICON print site locations [lat, lng, label]
+  const SITES = [
+    [30.2672,  -97.7431, 'Austin, TX'],
+    [31.5494,  -97.1467, 'Waco, TX'],
+    [32.7767,  -96.7970, 'Dallas, TX'],
+    [31.5493, -106.4424, 'Fort Bliss, TX'],
+    [25.7617,  -80.1918, 'Miami, FL'],
+    [26.1224,  -80.1373, 'Ft Lauderdale, FL'],
+    [34.2257,  -77.9447, 'Wilmington, NC'],
+    [35.1495,  -90.0490, 'Memphis, TN'],
+    [40.6936,  -89.5890, 'Peoria, IL'],
+    [42.0308,  -93.6319, 'Ames, IA']
+  ];
+  const EARTH_SITES = SITES;
+
+  // Distribute chips geographically: split by longitude (west→left, east→right),
+  // then sort each column N→S by latitude. The dataset.chipIdx still points
+  // back to the original SITES index so the tether-to-pin lookup stays valid.
+  document.querySelectorAll('.globe-stage').forEach(stage => {
+    const left  = stage.querySelector('[data-chip-col="left"]');
+    const right = stage.querySelector('[data-chip-col="right"]');
+
+    // Split by longitude (west = lower/more negative)
+    const indexed = EARTH_SITES.map((site, idx) => ({ site, idx }));
+    indexed.sort((a, b) => a.site[1] - b.site[1]);  // ascending lng = west→east
+    const half = Math.ceil(indexed.length / 2);
+    const leftCol  = indexed.slice(0, half);
+    const rightCol = indexed.slice(half);
+
+    // Sort each column N→S (descending latitude) for vertical reading order
+    leftCol.sort((a, b)  => b.site[0] - a.site[0]);
+    rightCol.sort((a, b) => b.site[0] - a.site[0]);
+
+    function appendChip(container, side, { site, idx }) {
+      const el = document.createElement('div');
+      el.className = 'chip';
+      el.dataset.chipIdx = idx;
+      el.dataset.side = side;
+      el.innerHTML = site[2];
+      container.appendChild(el);
+    }
+    leftCol.forEach (entry => appendChip(left,  'left',  entry));
+    rightCol.forEach(entry => appendChip(right, 'right', entry));
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  // Theme palettes
+  const THEMES = {
+    night: {
+      base: '255, 255, 255',
+      limb: 0.30, latGrid: 0.15, latEq: 0.30, lngGrid: 0.15, lngPM: 0.30,
+      contMin: 0.17, contRange: 0.28,
+      pinFill: '#FFFFFF', pinStroke: 'rgba(255,255,255,0)',
+      glowInner: 'rgba(255,255,255,0.45)', glowOuter: 'rgba(255,255,255,0)',
+      pulse: '255, 255, 255',
+      tetherFront: 'rgba(255,79,0,0.85)',
+      tetherBack:  'rgba(255,255,255,0.10)'
+    },
+    day: {
+      base: '26, 26, 26',
+      limb: 0.55, latGrid: 0.22, latEq: 0.45, lngGrid: 0.22, lngPM: 0.45,
+      contMin: 0.30, contRange: 0.45,
+      pinFill: '#1A1A1A', pinStroke: 'rgba(0,0,0,0)',
+      glowInner: 'rgba(0,0,0,0.35)', glowOuter: 'rgba(0,0,0,0)',
+      pulse: '26, 26, 26',
+      tetherFront: 'rgba(255,79,0,0.95)',
+      tetherBack:  'rgba(26,26,26,0.10)'
+    }
+  };
+  function themeFor(canvas) {
+    const host = canvas.closest('[data-theme]');
+    const name = (host && host.getAttribute('data-theme')) || 'night';
+    return THEMES[name] || THEMES.night;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // Continent silhouettes (sampled as dots)
+  const CONTINENTS = [
+    [[-168,65],[-160,71],[-140,72],[-125,71],[-105,72],[-85,75],[-70,70],[-65,60],
+     [-55,52],[-65,48],[-55,45],[-65,42],[-75,36],[-80,32],[-82,27],[-80,25],[-87,21],
+     [-90,18],[-95,16],[-100,17],[-105,21],[-115,28],[-118,32],[-122,38],[-124,45],
+     [-125,50],[-135,57],[-150,60],[-160,62],[-168,65]],
+    [[-55,60],[-30,60],[-22,73],[-30,82],[-55,82],[-55,60]],
+    [[-80,11],[-72,12],[-60,10],[-50,6],[-35,-5],[-35,-12],[-40,-22],[-50,-32],
+     [-58,-38],[-65,-50],[-72,-53],[-75,-50],[-73,-40],[-72,-28],[-78,-15],[-80,-5],
+     [-78,2],[-80,11]],
+    [[-17,14],[-17,30],[-10,33],[0,36],[10,37],[18,33],[25,32],[33,32],[35,28],
+     [42,18],[51,12],[51,6],[42,-2],[40,-12],[37,-20],[32,-26],[20,-35],[18,-35],
+     [14,-22],[12,-5],[8,5],[-5,5],[-10,8],[-15,12],[-17,14]],
+    [[-10,36],[-5,36],[3,42],[10,44],[18,40],[25,38],[28,40],[35,40],[40,45],
+     [40,60],[30,70],[10,70],[5,60],[-5,55],[-8,50],[-10,43],[-10,36]],
+    [[40,40],[45,38],[55,30],[60,25],[55,20],[50,12],[60,8],[70,8],[78,8],[90,22],
+     [97,15],[100,8],[105,5],[108,12],[115,18],[122,25],[130,30],[140,35],[145,42],
+     [155,52],[170,65],[180,68],[180,75],[140,77],[100,77],[60,75],[40,68],[35,60],
+     [35,50],[40,40]],
+    [[115,-12],[130,-12],[140,-10],[145,-13],[153,-25],[150,-38],[140,-38],
+     [125,-35],[115,-35],[113,-25],[115,-12]],
+    [[43,-12],[50,-15],[50,-25],[44,-25],[42,-18],[43,-12]],
+    [[130,32],[140,38],[145,45],[140,42],[135,34],[130,32]],
+    [[-10,50],[-2,50],[1,53],[-3,58],[-7,55],[-10,50]],
+    [[95,5],[105,5],[115,2],[125,2],[140,0],[140,-8],[125,-8],[110,-8],[100,-5],[95,5]],
+    [[166,-46],[174,-41],[178,-37],[176,-46],[168,-47],[166,-46]]
+  ];
+  function pointInPoly(lng, lat, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1];
+      const xj = poly[j][0], yj = poly[j][1];
+      if (((yi > lat) !== (yj > lat)) &&
+          (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+  function isLand(lat, lng) {
+    if (lat < -63) return true;
+    for (let i = 0; i < CONTINENTS.length; i++) {
+      if (pointInPoly(lng, lat, CONTINENTS[i])) return true;
+    }
+    return false;
+  }
+  const LAND_DOTS = (() => {
+    const dots = [];
+    const STEP = 4;
+    for (let lat = -86; lat <= 86; lat += STEP) {
+      const cols = Math.max(8, Math.round(54 * Math.cos(lat * Math.PI / 180)));
+      for (let i = 0; i < cols; i++) {
+        const lng = -180 + (360 * i / cols);
+        if (isLand(lat, lng)) dots.push([lat, lng]);
+      }
+    }
+    return dots;
+  })();
+
+  // ────────────────────────────────────────────────────────────────
+  // 3D math
+  function latLngToVec(lat, lng) {
+    const phi   = (90 - lat) * Math.PI / 180;
+    const theta = (lng + 180) * Math.PI / 180;
+    return {
+      x: -Math.sin(phi) * Math.cos(theta),
+      y:  Math.cos(phi),
+      z:  Math.sin(phi) * Math.sin(theta)
+    };
+  }
+  function rotateY(v, a) {
+    const c = Math.cos(a), s = Math.sin(a);
+    return { x: v.x * c + v.z * s, y: v.y, z: -v.x * s + v.z * c };
+  }
+  function rotateX(v, a) {
+    const c = Math.cos(a), s = Math.sin(a);
+    return { x: v.x, y: v.y * c - v.z * s, z: v.y * s + v.z * c };
+  }
+  function project(v, cx, cy, r) {
+    return { x: cx + v.x * r, y: cy - v.y * r, z: v.z };
+  }
+
+  // Tilt keeps US visible while spinning; rotation animates over time (CCW).
+  // SPIN_RATE exposed on window so the page orchestration can compute
+  // Page 2 duration as N full rotations.
+  const TILT = 0.54;
+  const SPIN_RATE = 0.13;  // rad/s
+  window.__globeSpinRate = SPIN_RATE;
+  let rotation = -0.047;
+  let lastT = performance.now();
+
+  // ────────────────────────────────────────────────────────────────
+  // Render setup — one entry per stage
+  const stages = Array.from(document.querySelectorAll('.globe-stage')).map(stage => {
+    const canvas = stage.querySelector('canvas.globe');
+    const ctx = canvas.getContext('2d');
+    return { stage, canvas, ctx };
+  });
+
+  function fitAll() {
+    const dpr = window.devicePixelRatio || 1;
+    for (const { canvas, ctx } of stages) {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      canvas.width  = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+
+  function drawOne({ stage, canvas, ctx }) {
+    const T = themeFor(canvas);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+
+    // Globe centered; chips flank left/right with horizontal margin
+    const SIDE_RESERVE = 130;
+    const cx = w / 2;
+    const cy = h / 2;
+    const r  = Math.min((w - SIDE_RESERVE * 2) * 0.5, h * 0.56);
+    const px = r / 220;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Limb
+    ctx.strokeStyle = `rgba(${T.base},${T.limb})`;
+    ctx.lineWidth = Math.max(1, 1.2 * px);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Latitudes (back-face culled)
+    const SEGMENTS = 96;
+    const FRONT_EPS = 0.0;
+    for (let lat = -60; lat <= 60; lat += 20) {
+      ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i <= SEGMENTS; i++) {
+        const lng = -180 + (360 * i / SEGMENTS);
+        let v = latLngToVec(lat, lng);
+        v = rotateY(v, rotation);
+        v = rotateX(v, TILT);
+        const p = project(v, cx, cy, r);
+        if (v.z > FRONT_EPS) {
+          if (!pen) { ctx.moveTo(p.x, p.y); pen = true; }
+          else      { ctx.lineTo(p.x, p.y); }
+        } else {
+          pen = false;
+        }
+      }
+      const isEq = lat === 0;
+      ctx.strokeStyle = `rgba(${T.base},${isEq ? T.latEq : T.latGrid})`;
+      ctx.lineWidth = Math.max(0.8, (isEq ? 1.3 : 1.0) * px);
+      ctx.stroke();
+    }
+
+    // Longitudes
+    for (let lng = -180; lng < 180; lng += 20) {
+      ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i <= SEGMENTS; i++) {
+        const lat = -90 + (180 * i / SEGMENTS);
+        let v = latLngToVec(lat, lng);
+        v = rotateY(v, rotation);
+        v = rotateX(v, TILT);
+        const p = project(v, cx, cy, r);
+        if (v.z > FRONT_EPS) {
+          if (!pen) { ctx.moveTo(p.x, p.y); pen = true; }
+          else      { ctx.lineTo(p.x, p.y); }
+        } else {
+          pen = false;
+        }
+      }
+      const isPM = lng === 0;
+      ctx.strokeStyle = `rgba(${T.base},${isPM ? T.lngPM : T.lngGrid})`;
+      ctx.lineWidth = Math.max(0.7, (isPM ? 1.1 : 0.9) * px);
+      ctx.stroke();
+    }
+
+    // Continent dots
+    for (let i = 0; i < LAND_DOTS.length; i++) {
+      const [lat, lng] = LAND_DOTS[i];
+      let v = latLngToVec(lat, lng);
+      v = rotateY(v, rotation);
+      v = rotateX(v, TILT);
+      if (v.z <= 0) continue;
+      const p = project(v, cx, cy, r);
+      const t = v.z;
+      const alpha = T.contMin + t * T.contRange;
+      const radius = Math.max(0.9, (1.0 + t * 0.9) * px);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${T.base},${alpha})`;
+      ctx.fill();
+    }
+
+    // Project pins
+    const projected = EARTH_SITES.map(([lat, lng, label]) => {
+      let v = latLngToVec(lat, lng);
+      v = rotateY(v, rotation);
+      v = rotateX(v, TILT);
+      const p = project(v, cx, cy, r);
+      return { p, v, label };
+    });
+
+    // Connector tethers — chip → pin. Drawn before pins so pins sit on top.
+    //
+    // Coordinate strategy: the dashboard's parent has transform: scale() to
+    // fit viewport. getBoundingClientRect() returns POST-transform coords;
+    // canvas drawing happens in PRE-transform layout pixels. To stay in the
+    // canvas's coordinate space, we use offsetLeft/Top/Width/Height, which
+    // are pure CSS layout pixels — unaffected by ancestor transforms.
+    //
+    // Walk up the offsetParent chain from chip → ... → stage, summing
+    // offsets to get the chip's position relative to stage in layout space.
+    const chips = stage.querySelectorAll('[data-chip-idx]');
+    chips.forEach(chip => {
+      const idx = +chip.dataset.chipIdx;
+      const pin = projected[idx];
+      if (!pin) return;
+
+      // Accumulate offsets up to the stage
+      let xOff = 0, yOff = 0, node = chip;
+      while (node && node !== stage) {
+        xOff += node.offsetLeft;
+        yOff += node.offsetTop;
+        node = node.offsetParent;
+      }
+      const cw = chip.offsetWidth;
+      const ch = chip.offsetHeight;
+      const side = chip.dataset.side; // 'left' or 'right'
+
+      // Anchor at chip's inner edge (right edge for left col, left edge for
+      // right col), vertically centered on chip box.
+      const ax = side === 'left' ? xOff + cw : xOff;
+      const ay = yOff + ch / 2;
+
+      const onFront = pin.v.z > 0;
+      // Bezier control points biased horizontally so curve sweeps cleanly
+      // from the chip's flank toward the pin on the globe.
+      const dx = pin.p.x - ax;
+      const dy = pin.p.y - ay;
+      const c1x = ax + dx * 0.55;
+      const c1y = ay;
+      const c2x = pin.p.x - dx * 0.30;
+      const c2y = pin.p.y - dy * 0.20;
+
+      // Tether stroke matches the project tracker swim line — comet-tail
+      // gradient from faint at the chip anchor to full at the pin (the pin
+      // itself plays the role of the swim's leading-edge dot). Back-facing
+      // tethers stay dashed for depth, but use the same accent so the
+      // palette reads as one system across both panels.
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.bezierCurveTo(c1x, c1y, c2x, c2y, pin.p.x, pin.p.y);
+      if (onFront) {
+        const grad = ctx.createLinearGradient(ax, ay, pin.p.x, pin.p.y);
+        grad.addColorStop(0, 'rgba(255, 79, 0, 0.10)');
+        grad.addColorStop(1, 'rgba(255, 79, 0, 1.00)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = Math.max(1.5, 1.5 * px);
+      } else {
+        ctx.strokeStyle = 'rgba(255, 79, 0, 0.18)';
+        ctx.lineWidth = Math.max(0.9, 1.0 * px);
+        ctx.setLineDash([3 * px, 4 * px]);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Front-facing pins
+    projected
+      .slice()
+      .sort((a, b) => a.v.z - b.v.z)
+      .forEach(({ p, v }) => {
+        if (v.z <= 0) return;
+
+        const dotR = Math.max(2.6, 3.2 * px);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = T.pinFill;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
+        ctx.strokeStyle = T.pinStroke;
+        ctx.lineWidth = Math.max(0.7, 0.8 * px);
+        ctx.stroke();
+      });
+
+    // Radar bloop on Austin + Miami — two staggered rings expand outward
+    // and fade, emulating sonar/radar pings rather than a steady pulse.
+    const BLOOP_SITES = [0, 4];   // SITES indices: Austin, Miami
+    const PERIOD = 2000;          // ms per full ping cycle
+    const RINGS = 2;              // staggered overlapping rings per site
+    const minR = Math.max(3, 4 * px);
+    const maxR = Math.max(28, 36 * px);
+
+    for (const idx of BLOOP_SITES) {
+      const site = projected[idx];
+      if (!site || site.v.z <= 0) continue;
+      for (let i = 0; i < RINGS; i++) {
+        // Each ring offset by 1/RINGS of the period for overlapping waves
+        const t = ((performance.now() / PERIOD) + (i / RINGS)) % 1;
+        const ringR = minR + t * (maxR - minR);
+        const alpha = (1 - t) * 0.65;  // fade as ring expands
+
+        ctx.beginPath();
+        ctx.arc(site.p.x, site.p.y, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${T.pulse}, ${alpha})`;
+        ctx.lineWidth = Math.max(0.9, 1.1 * px);
+        ctx.stroke();
+      }
+    }
+
+  }
+
+  function tick(now) {
+    const dt = (now - lastT) / 1000;
+    lastT = now;
+    // CCW (continents drift right-to-left as viewed from front)
+    rotation -= dt * SPIN_RATE;
+    for (const s of stages) drawOne(s);
+    requestAnimationFrame(tick);
+  }
+
+  fitAll();
+  window.addEventListener('resize', fitAll);
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
