@@ -281,7 +281,7 @@
     width: 8px; height: 8px;
     border-radius: 50%;
     background: var(--accent);
-    animation: pulse 2.4s ease-in-out infinite;
+    animation: pulse 2s ease-in-out infinite;
   }
   @keyframes pulse {
     0%, 100% { opacity: 1; }
@@ -297,7 +297,7 @@
   }
   .time-block .time {
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 400;            /* §6.7 mono regular */
     color: var(--text);
     letter-spacing: 0.05em;
   }
@@ -410,7 +410,6 @@
     text-transform: uppercase;
     text-align: right;
   }
-  body:not(.dark) .phase-group-label { font-weight: 500; }
   .phase-row {
     display: flex;
     align-items: center;
@@ -441,7 +440,6 @@
       opacity 380ms ease var(--d, 0s),
       transform 480ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s);
   }
-  body:not(.dark) .phase-chip { font-weight: 500; }
   .project-detail.fill-active .phase-chip {
     opacity: 1;
     transform: translateY(0);
@@ -472,7 +470,7 @@
     border-color: var(--status-on);
   }
   .project-detail.fill-active .phase-chip.leading {
-    animation: phase-leading-pulse 2.4s ease-out infinite;
+    animation: phase-leading-pulse 2s ease-out infinite;
     animation-delay: calc(var(--d, 0s) + 600ms);
   }
   @keyframes phase-leading-pulse {
@@ -668,7 +666,6 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
-  body:not(.dark) .phase-band-label { font-weight: 500; }
 
   /* Marker = dot at the chart point. Sits inside .timeline-chart at
      `left: pos%; bottom: y%`. Each marker is a 0×0 box with the dot
@@ -712,10 +709,10 @@
     opacity: 0;
   }
   .timeline-section.fill-active .timeline-marker.terminal .timeline-dot::after {
-    animation: timeline-bloop 2.4s ease-out 1.6s infinite;
+    animation: timeline-bloop 2s ease-out 1.6s infinite;
   }
   .timeline-section.fill-active .timeline-marker.terminal .timeline-dot::before {
-    animation: timeline-bloop 2.4s ease-out 2.8s infinite;
+    animation: timeline-bloop 2s ease-out 2.8s infinite;
   }
   @keyframes timeline-bloop {
     0%   { transform: scale(0.6); opacity: 0.7; }
@@ -819,7 +816,7 @@
   .chip {
     font-family: var(--mono);
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;            /* §6.7 mono regular */
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 8px 14px;
@@ -874,7 +871,7 @@
   .zone-label {
     font-family: var(--mono);
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;            /* §6.7 mono regular */
     letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -905,7 +902,7 @@
   .swim-header > * {
     font-family: var(--mono);
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 400;            /* §6.7 mono regular */
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--text-muted);
@@ -1014,7 +1011,7 @@
   .swim-grid.fill-active .swim-leading {
     animation:
       swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards,
-      swim-leading-pulse 2.4s ease-out calc(var(--d, 0s) + 1.4s) infinite;
+      swim-leading-pulse 2s ease-out calc(var(--d, 0s) + 1.4s) infinite;
   }
   @keyframes swim-line-fill {
     from { width: 0; }
@@ -1180,7 +1177,7 @@
   .countdown-target strong {
     display: block;
     color: var(--text);
-    font-weight: 500;
+    font-weight: 400;            /* §6.7 mono regular */
     font-size: 14px;
     letter-spacing: 0.05em;
   }
@@ -1320,27 +1317,27 @@
     transform: translateY(-1px);
   }
 
-  /* Pure numeric values: mono */
+  /* Pure numeric values: mono §6.7 regular */
   .kpi-table .num {
     font-family: var(--mono);
     color: var(--text);
-    font-weight: 500;
+    font-weight: 400;
     font-size: 13px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
-  .kpi-table .num.goal { color: var(--text-muted); font-weight: 400; }
+  .kpi-table .num.goal { color: var(--text-muted); }
 
   /* Multi-component values: mono — matches numeric values for column consistency */
   .kpi-table .multi {
     font-family: var(--mono);
     color: var(--text);
-    font-weight: 500;
+    font-weight: 400;
     font-size: 13px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
-  .kpi-table .multi.goal { color: var(--text-muted); font-weight: 400; }
+  .kpi-table .multi.goal { color: var(--text-muted); }
 
   /* ============================================
      EVENTS (col 2 row 2) + IMAGERY (col 3 row 2)
@@ -1397,10 +1394,10 @@
   .event-name {
     font-family: var(--display);
     font-size: 24px;
-    font-weight: 600;
+    font-weight: 700;           /* §6.1 Heading SM Bold */
     color: var(--text);
     line-height: 1.2;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;    /* §6.1 Heading tier */
   }
 
   /* ----- Slideshow — pagination unified with .okr-pagination (32×3 bar) ----- */
@@ -1500,9 +1497,9 @@
   .ticker-item .ticker-num {
     font-family: var(--display);
     font-size: 36px;
-    font-weight: 600;
+    font-weight: 700;           /* §6.1 Heading MD Bold */
     color: var(--text);
-    letter-spacing: 0;
+    letter-spacing: -0.02em;    /* §6.1 Heading tier */
   }
 
   /* ============================================
