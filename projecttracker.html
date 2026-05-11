@@ -985,7 +985,8 @@
   }
 
   /* The flow line itself — gradient from faint (start) to full (leading edge),
-     creating a comet-tail trajectory feel. Width animates 0 → var(--p). */
+     creating a comet-tail trajectory feel. Width animates 0 → var(--p).
+     Status-green palette: progress-in-flight reads as on-track. */
   .swim-line {
     position: absolute;
     left: 0;
@@ -993,8 +994,8 @@
     height: 2px;
     width: 0;
     background: linear-gradient(to right,
-      rgba(255, 79, 0, 0.10),
-      rgba(255, 79, 0, 1.0));
+      rgba(74, 222, 128, 0.10),
+      rgba(74, 222, 128, 1.0));
     transform: translateY(-50%);
     border-radius: 1px;
   }
@@ -1008,10 +1009,10 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--status-on);
     transform: translate(-50%, -50%) scale(0);
     opacity: 0;
-    box-shadow: 0 0 6px rgba(255, 79, 0, 0.5);
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
   }
 
   /* Cascade animations — fire when .swim-grid.fill-active is set on Page 2 entry */
@@ -1032,9 +1033,9 @@
     to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
   @keyframes swim-leading-pulse {
-    0%   { box-shadow: 0 0 0 0   rgba(255, 79, 0, 0.55), 0 0 6px rgba(255, 79, 0, 0.5); }
-    70%  { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0),    0 0 6px rgba(255, 79, 0, 0.5); }
-    100% { box-shadow: 0 0 0 14px rgba(255, 79, 0, 0),    0 0 6px rgba(255, 79, 0, 0.5); }
+    0%   { box-shadow: 0 0 0 0   rgba(74, 222, 128, 0.55), 0 0 6px rgba(74, 222, 128, 0.5); }
+    70%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0),    0 0 6px rgba(74, 222, 128, 0.5); }
+    100% { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0),    0 0 6px rgba(74, 222, 128, 0.5); }
   }
 
   .cell {
