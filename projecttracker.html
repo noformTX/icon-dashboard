@@ -1773,55 +1773,33 @@
     });
   })();
 
-  // Get hours/minutes/seconds for a given timezone string (or null for local)
-  function getTimeForZone(tz) {
+  // Zone clocks — hour/minute only (no second hand). Cache one
+  // Intl.DateTimeFormat per zone + the hand elements so each tick is
+  // a few setAttribute calls. Update once per minute via setInterval —
+  // running this at requestAnimationFrame rate creates 240
+  // Intl.DateTimeFormat objects/sec on a low-end TV browser.
+  const zoneClocks = Array.from(document.querySelectorAll('.zone-clock')).map(clock => ({
+    fmt: new Intl.DateTimeFormat('en-US', {
+      timeZone: clock.dataset.tz,
+      hour: 'numeric', minute: 'numeric', hour12: false
+    }),
+    hourHand:   clock.querySelector('.hand.hour'),
+    minuteHand: clock.querySelector('.hand.minute')
+  }));
+
+  function tickZoneClocks() {
     const now = new Date();
-    if (!tz) {
-      return {
-        h: now.getHours(),
-        m: now.getMinutes(),
-        s: now.getSeconds() + now.getMilliseconds() / 1000
-      };
-    }
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz,
-      hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false
-    }).formatToParts(now);
-    const find = type => parseInt(parts.find(p => p.type === type).value, 10);
-    return {
-      h: find('hour') % 24,
-      m: find('minute'),
-      s: find('second') + now.getMilliseconds() / 1000
-    };
-  }
-
-  // Animate every clock — main clock uses local time + second hand;
-  // zone clocks use their data-tz attribute, no second hand.
-  const mainClock = document.querySelector('.countdown-body .clock');
-  const zoneClockEls = document.querySelectorAll('.zone-clock');
-
-  function tickClock() {
-    // Main clock — local time, hour/minute/second
-    if (mainClock) {
-      const { h, m, s } = getTimeForZone(null);
-      const mFloat = m + s / 60;
-      const hFloat = (h % 12) + mFloat / 60;
-      mainClock.querySelector('.hand.hour').setAttribute('transform',   `rotate(${hFloat * 30} 100 100)`);
-      mainClock.querySelector('.hand.minute').setAttribute('transform', `rotate(${mFloat * 6} 100 100)`);
-      mainClock.querySelector('.hand.second').setAttribute('transform', `rotate(${s * 6} 100 100)`);
-    }
-
-    // Zone clocks — per-tz time, hour/minute only
-    zoneClockEls.forEach(clock => {
-      const { h, m } = getTimeForZone(clock.dataset.tz);
+    for (const { fmt, hourHand, minuteHand } of zoneClocks) {
+      const parts = fmt.formatToParts(now);
+      const h = parseInt(parts.find(p => p.type === 'hour').value, 10) % 24;
+      const m = parseInt(parts.find(p => p.type === 'minute').value, 10);
       const hFloat = (h % 12) + m / 60;
-      clock.querySelector('.hand.hour').setAttribute('transform',   `rotate(${hFloat * 30} 100 100)`);
-      clock.querySelector('.hand.minute').setAttribute('transform', `rotate(${m * 6} 100 100)`);
-    });
-
-    requestAnimationFrame(tickClock);
+      hourHand.setAttribute('transform',   `rotate(${hFloat * 30} 100 100)`);
+      minuteHand.setAttribute('transform', `rotate(${m * 6} 100 100)`);
+    }
   }
-  requestAnimationFrame(tickClock);
+  tickZoneClocks();
+  setInterval(tickZoneClocks, 60_000);
 </script>
 
 <script>
@@ -2007,7 +1985,10 @@
   });
 
   function fitAll() {
-    const dpr = window.devicePixelRatio || 1;
+    // Cap dpr at 1 — globe is small (~260px) and viewed from across the
+    // room on a TV; HiDPI buffers (dpr 2-3 on 4K) blow up memory and
+    // per-frame drawImage cost for zero perceptible gain.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1);
     for (const s of stages) {
       const { canvas, ctx, staticCanvas, staticCtx } = s;
       const w = canvas.clientWidth;
@@ -2246,21 +2227,22 @@
     }
   }
 
-  // Throttle to ~30fps — the bloop period is 2s, so 30fps still reads
-  // smooth and halves canvas work on low-end TV browsers (OptiSigns etc.).
-  const FRAME_INTERVAL = 1000 / 30;
-  let lastDraw = 0;
-  function tick(now) {
-    if (now - lastDraw >= FRAME_INTERVAL) {
-      for (const s of stages) drawFrame(s);
-      lastDraw = now;
-    }
-    requestAnimationFrame(tick);
+  // setInterval at 50ms (20fps) instead of requestAnimationFrame —
+  // bloop period is 2s so 20fps is plenty smooth, and we stop firing
+  // a rAF callback at the display refresh rate (60-120Hz) just to
+  // gate it down. Also skips drawing entirely while Page 1 is
+  // off-screen (orchestration translates the pages-track during the
+  // project-detail slide), so the globe canvas isn't repainting for
+  // a panel nobody can see.
+  const pagesTrack = document.getElementById('pages-track');
+  function tick() {
+    if (pagesTrack.classList.contains('page-1')) return;  // Page 1 off-screen
+    for (const s of stages) drawFrame(s);
   }
 
   fitAll();
   window.addEventListener('resize', fitAll);
-  requestAnimationFrame(tick);
+  setInterval(tick, 50);
 })();
 </script>
 </body>
