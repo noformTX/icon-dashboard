@@ -5,7 +5,7 @@
 <title>ICON Dashboard — Q1 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&family=Wix+Madefor+Display:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* ICON Brand 2026 — D+B / PRIME sub-brand
      Neutral gray + orange (O50). Light mode = D+B (G90 surfaces),
@@ -47,23 +47,28 @@
     --accent:   var(--o50);
     --logo:     #000000;       /* wordmark — pure black on light, never tinted */
 
-    /* On-surface elements — black at varying opacities (AA-tuned) */
+    /* On-surface elements — §6.11 AA-mode discipline applies dashboard-wide
+       (TV viewed at distance). Subtle 0.55, muted 0.66, primary 0.92. */
     --text:          rgba(0, 0, 0, 0.92);
-    --text-muted:    rgba(0, 0, 0, 0.62);
+    --text-muted:    rgba(0, 0, 0, 0.66);
     --text-subtle:   rgba(0, 0, 0, 0.55);
-    --rule-heading:  rgba(0, 0, 0, 0.85);
     --rule-interior: rgba(0, 0, 0, 0.18);
     --rule-chrome:   rgba(0, 0, 0, 0.12);
     --surface-tint:  rgba(0, 0, 0, 0.05);
 
-    /* Status text — semantic colors, darkened for AA on G95 panel
-       (the bright Tech variants fail AA on a near-white surface).
-       Resolved contrasts on G95: green ~5.0:1, amber ~5.0:1, red ~5.5:1. */
+    /* Status text — semantic colors. Resolved contrasts on G95:
+       green ~5.0:1 (AA pass), red ~5.5:1 (AA pass). Amber #f59e0b on
+       near-white is ~2.4:1 — fails AA, but kept vivid for live-register
+       legibility on the TV (§6.10). Verify visually before darkening. */
     --status-on:   #16a34a;    /* vivid green */
     --status-risk: #f59e0b;    /* vivid amber — reads as yellow not brown */
     --status-off:  #ef4444;    /* vivid red */
 
-    --display: 'Lightspeed', 'DM Sans', 'Helvetica Neue', sans-serif;
+    /* §6 — Lightspeed is the canonical display; Wix Madefor Display is
+       the brand-approved production fallback. Lightspeed isn't loaded
+       from disk in this single-file deliverable, so display tier
+       resolves to Wix Madefor — same silhouette family. */
+    --display: 'Lightspeed', 'Wix Madefor Display', sans-serif;
     --body:    'Helvetica Neue', 'Inter', sans-serif;
     --mono:    'Roboto Mono', 'Courier New', monospace;
   }
@@ -81,11 +86,11 @@
     --bg-panel: #1f1f1f;
     --logo:     #ffffff;
 
-    /* On-surface elements — white at varying opacities (AA-tuned) */
+    /* On-surface elements — §6.11 AA-mode floors on dark: subtle 0.50,
+       muted 0.66, primary 0.92. */
     --text:          rgba(255, 255, 255, 0.92);
-    --text-muted:    rgba(255, 255, 255, 0.62);
+    --text-muted:    rgba(255, 255, 255, 0.66);
     --text-subtle:   rgba(255, 255, 255, 0.50);
-    --rule-heading:  rgba(255, 255, 255, 0.85);
     --rule-interior: rgba(255, 255, 255, 0.18);
     --rule-chrome:   rgba(255, 255, 255, 0.12);
     --surface-tint:  rgba(255, 255, 255, 0.05);
@@ -137,7 +142,7 @@
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 400;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 8px 16px;
     line-height: 1;
@@ -162,7 +167,7 @@
   .chip.mini {
     font-size: 11px;
     padding: 4px 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
   }
   .chip.mini.imp-high { padding: 3px 12px; }
 
@@ -173,7 +178,7 @@
     font-family: var(--mono);
     font-size: 13px;
     font-weight: 400;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     white-space: nowrap;
     color: var(--text-muted);
@@ -181,7 +186,7 @@
   .status-label.on   { color: var(--status-on); }
   .status-label.risk { color: var(--status-risk); }
   .status-label.off  { color: var(--status-off); }
-  .status-label.mini { font-size: 12px; letter-spacing: 0.04em; }
+  .status-label.mini { font-size: 12px; letter-spacing: 0.05em; }
 
   /* Status indicator dot — leading affordance for status rows.
      Color matches the trailing label so the row reads as a single
@@ -216,7 +221,7 @@
     align-items: center;
     color: var(--logo);
     height: 32px;
-    min-width: 48px;
+    min-width: 48px;   /* §1 — wordmark sizing 48–80px width range */
     max-width: 80px;
   }
   .icon-wordmark svg { height: 100%; width: auto; display: block; }
@@ -230,7 +235,7 @@
   .header-meta .eyebrow {
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
   }
@@ -259,26 +264,8 @@
   .page-toggle .slot { fill: currentColor; opacity: 0.3; transition: opacity 200ms ease; }
   .page-toggle .slot.active { fill: var(--accent); opacity: 1; }
 
-  /* Mono weight in light/D+B mode bumps to 500 — Roboto Mono at 400
-     reads thin against white/G95 surfaces. Dark mode keeps 400 since
-     white-opacity on dark gray is naturally weighted enough. */
-  body:not(.dark) .chip,
-  body:not(.dark) .status-label,
-  body:not(.dark) .header-meta .eyebrow,
-  body:not(.dark) .live-indicator,
-  body:not(.dark) .time-block,
-  body:not(.dark) .cell-eyebrow,
-  body:not(.dark) .cell-meta,
-  body:not(.dark) .countdown-unit,
-  body:not(.dark) .countdown-target,
-  body:not(.dark) .kpi-table th,
-  body:not(.dark) .kpi-table .num,
-  body:not(.dark) .event-month,
-  body:not(.dark) .event-when,
-  body:not(.dark) .slide-frame.placeholder,
-  body:not(.dark) .ticker-item {
-    font-weight: 500;
-  }
+  /* Mono register is Regular 400 across both themes per §6.7 — the
+     earlier per-surface light-mode bump to 500 is deprecated. */
 
   .live-indicator {
     display: flex;
@@ -286,7 +273,7 @@
     gap: 8px;
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--accent);
     text-transform: uppercase;
   }
@@ -312,11 +299,11 @@
     font-size: 18px;
     font-weight: 500;
     color: var(--text);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
   }
   .time-block .date {
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
   }
 
@@ -418,7 +405,7 @@
     width: 60px;
     font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-subtle);
     text-transform: uppercase;
     text-align: right;
@@ -441,7 +428,7 @@
     font-family: var(--mono);
     font-size: 13px;
     font-weight: 400;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 11px 18px;
     border-radius: 999px;
@@ -463,6 +450,13 @@
     background: var(--g20);
     color: var(--g60);
     border: 1px solid var(--g20);
+  }
+  /* Light mode invert — G20 reads as a hard dark pill on white panels;
+     flip to G80 bg + G30 text to stay in register with surrounding chrome. */
+  body:not(.dark) .phase-chip.complete {
+    background: var(--g80);
+    color: var(--g30);
+    border-color: var(--g80);
   }
   .phase-chip.pending {
     background: transparent;
@@ -486,15 +480,13 @@
     70%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
     100% { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
   }
-  /* §6.1 — display, §6.3 SemiBold default, §6.4 -0.01em tracking
-     for the 88-128px range. Sized to 120px so it reads as a metric
-     rather than a hero, leaving room on the right for phase chips. */
+  /* §6.1 Display tier — 120px Heavy 800 at -0.04em. */
   .hero-num {
     font-family: var(--display);
     font-size: 120px;
-    font-weight: 600;
+    font-weight: 800;
     line-height: 0.84;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.04em;
     color: var(--text);
     flex-shrink: 0;
   }
@@ -533,16 +525,15 @@
     gap: 24px;
     min-width: 0;
   }
-  /* §6.1 Title tier (64-88px), §6.3 SemiBold default,
-     §6.4 -0.01em tracking for 64-88px range. Sized to 48px since
-     the panel now sits next to a 256px hero numeral and shouldn't
-     compete for focal weight. */
+  /* §6.1 Heading tier — 40px Bold 700 at -0.02em. Sized to 42px to
+     pair visually with the .okr-title on Page 1 without competing
+     with the 256px countdown numeral for focal weight. */
   .project-title {
     font-family: var(--display);
     font-size: 42px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.1;
-    letter-spacing: -0.005em;
+    letter-spacing: -0.02em;
     color: var(--text);
   }
   /* §6.1 Lead tier (24-28px) — §6.4 0 to -0.01em tracking,
@@ -588,20 +579,19 @@
   .project-stat-num {
     font-family: var(--display);
     font-size: 40px;
-    font-weight: 600;
+    font-weight: 700;        /* §7.6 stat-row figure Bold */
     line-height: 0.95;
     color: var(--text);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em; /* §6.1 Heading tier */
     flex-shrink: 0;
   }
   .project-stat-label {
     font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
   }
-  body:not(.dark) .project-stat-label { font-weight: 500; }
 
   /* ── Timeline panel — fills the bottom row ── */
   .timeline-section {
@@ -673,7 +663,7 @@
     transform: translateX(-50%);
     font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-subtle);
     text-transform: uppercase;
     white-space: nowrap;
@@ -759,19 +749,18 @@
   .timeline-stack .timeline-date {
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
     white-space: nowrap;
   }
-  body:not(.dark) .timeline-stack .timeline-date { font-weight: 500; }
   .timeline-stack .timeline-label {
-    font-family: var(--display);
+    font-family: var(--body);   /* §6.5 body register at small sizes */
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;            /* §6.1 Subhead Medium */
     color: var(--text);
     line-height: 1.2;
-    letter-spacing: -0.005em;
+    letter-spacing: 0;
     white-space: nowrap;
   }
   .timeline-stack .timeline-cap {
@@ -831,7 +820,7 @@
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 8px 14px;
     border: 1px solid;
@@ -886,7 +875,7 @@
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
   }
@@ -917,7 +906,7 @@
     font-family: var(--mono);
     font-size: 10px;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--text-muted);
     text-align: center;
@@ -941,7 +930,7 @@
   .swim-name {
     font-family: var(--body);
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;        /* §6.1 Subhead Medium — working-register label */
     color: var(--text);
     padding-right: 12px;
     white-space: nowrap;
@@ -1067,14 +1056,14 @@
   .cell-eyebrow {
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
   }
   .cell-meta {
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-subtle);
     text-transform: uppercase;
   }
@@ -1103,10 +1092,10 @@
   .countdown-num {
     font-family: var(--display);
     font-size: 256px;
-    font-weight: 600;
+    font-weight: 800;        /* §6.1 Display Heavy */
     line-height: 0.84;
     color: var(--text);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em; /* §6.1 Display tier tracking */
     transform: translateX(-3px);
   }
 
@@ -1181,7 +1170,7 @@
   .countdown-target {
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
     text-align: right;
@@ -1193,7 +1182,7 @@
     color: var(--text);
     font-weight: 500;
     font-size: 14px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
   }
 
   /* ============================================
@@ -1228,7 +1217,7 @@
     font-weight: 700;
     line-height: 1.1;
     color: var(--text);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;  /* §6.1 Heading tier */
     margin-bottom: 24px;
     flex-shrink: 0;
   }
@@ -1291,7 +1280,7 @@
   .kpi-table th {
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--text-muted);
     text-align: left;
@@ -1337,7 +1326,7 @@
     color: var(--text);
     font-weight: 500;
     font-size: 13px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
   }
   .kpi-table .num.goal { color: var(--text-muted); font-weight: 400; }
@@ -1348,7 +1337,7 @@
     color: var(--text);
     font-weight: 500;
     font-size: 13px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
   }
   .kpi-table .multi.goal { color: var(--text-muted); font-weight: 400; }
@@ -1383,7 +1372,7 @@
   .event-month {
     font-family: var(--mono);
     font-size: 10px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
     margin-bottom: 6px;
@@ -1391,15 +1380,15 @@
   .event-day {
     font-family: var(--display);
     font-size: 48px;
-    font-weight: 600;
+    font-weight: 700;        /* §7.6 stat-row figure Bold */
     line-height: 0.85;
     color: var(--text);
-    letter-spacing: 0;
+    letter-spacing: -0.02em; /* §6.1 Heading tier */
   }
-  /* Highlight: whole date "tag" turns accent so the highlight reads as
-     deliberate (not just a decorative number color) */
-  .event.highlight .event-day,
-  .event.highlight .event-month { color: var(--accent); }
+  /* Highlight: accent lands on the day numeral only. §3.2 — accent
+     is not the default color for mono-caps section labels, so the
+     month chrome stays muted. */
+  .event.highlight .event-day { color: var(--accent); }
 
   .event-info {
     flex-shrink: 0;
@@ -1414,17 +1403,16 @@
     letter-spacing: -0.01em;
   }
 
-  /* ----- Slideshow ----- */
+  /* ----- Slideshow — pagination unified with .okr-pagination (32×3 bar) ----- */
   .slide-pagination {
     display: flex;
-    gap: 4px;
+    gap: 8px;
   }
   .slide-pagination .dot {
-    width: 8px;
-    height: 8px;
+    width: 32px;
+    height: 3px;
     background: var(--rule-interior);
-    border-radius: 2px;
-    transition: background 200ms ease;
+    transition: background 400ms ease;
   }
   .slide-pagination .dot.active {
     background: var(--accent);
@@ -1464,7 +1452,7 @@
     font-size: 72px;
     font-weight: 400;
     color: var(--text-subtle);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
   }
 
   /* ============================================
@@ -1505,7 +1493,7 @@
     gap: 16px;
     font-family: var(--mono);
     font-size: 13px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
     text-transform: uppercase;
   }
