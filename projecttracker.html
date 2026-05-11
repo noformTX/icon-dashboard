@@ -1970,33 +1970,44 @@
   }
 
   // Globe is locked in place — no spin. Rotation is set once to center
-  // the US print-site cluster on the front of the globe. Radar bloops
-  // on Austin + Miami still animate per frame via performance.now().
+  // the US print-site cluster on the front of the globe. The static
+  // globe surface is rendered once into an offscreen canvas (see below);
+  // per frame, we blit the cache and draw only the Austin/Miami radar
+  // bloops on top. ~100× cheaper than redrawing the whole globe at 60fps.
   const TILT = 0.54;
-  const SPIN_RATE = 0;       // rad/s — globe is static
-  let rotation = -0.047;     // initial rotation centers continental US
-  let lastT = performance.now();
+  const rotation = -0.047;   // fixed; centers continental US
 
   // ────────────────────────────────────────────────────────────────
-  // Render setup — one entry per stage
+  // Render setup — one entry per stage. With rotation locked, the globe
+  // surface (limb, grid, continent dots, pins, tethers) is fully static.
+  // We render it once to an offscreen canvas (staticCanvas) and blit it
+  // every frame, then draw only the radar bloops on top. This avoids
+  // re-running thousands of latLngToVec/rotate/project calls per frame.
   const stages = Array.from(document.querySelectorAll('.globe-stage')).map(stage => {
     const canvas = stage.querySelector('canvas.globe');
     const ctx = canvas.getContext('2d');
-    return { stage, canvas, ctx };
+    const staticCanvas = document.createElement('canvas');
+    const staticCtx = staticCanvas.getContext('2d');
+    return { stage, canvas, ctx, staticCanvas, staticCtx, bloopSites: [], bloopPx: 1 };
   });
 
   function fitAll() {
     const dpr = window.devicePixelRatio || 1;
-    for (const { canvas, ctx } of stages) {
+    for (const s of stages) {
+      const { canvas, ctx, staticCanvas, staticCtx } = s;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       canvas.width  = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      staticCanvas.width  = canvas.width;
+      staticCanvas.height = canvas.height;
+      staticCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawStaticGlobe(s);
     }
   }
 
-  function drawOne({ stage, canvas, ctx }) {
+  function drawStaticGlobe({ stage, canvas, staticCtx: ctx, bloopSites }) {
     const T = themeFor(canvas);
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
@@ -2176,39 +2187,59 @@
         ctx.stroke();
       });
 
-    // Radar bloop on Austin + Miami — two staggered rings expand outward
-    // and fade, emulating sonar/radar pings rather than a steady pulse.
-    const BLOOP_SITES = [0, 4];   // SITES indices: Austin, Miami
-    const PERIOD = 2000;          // ms per full ping cycle
-    const RINGS = 2;              // staggered overlapping rings per site
+    // Cache bloop positions for the per-frame overlay (Austin idx 0,
+    // Miami idx 4). Skipped here — drawn live in tick() over the
+    // blitted static cache.
+    bloopSites.length = 0;
+    for (const idx of [0, 4]) {
+      const site = projected[idx];
+      if (site && site.v.z > 0) bloopSites.push({ x: site.p.x, y: site.p.y });
+    }
+    // Cache pixel scale + theme pulse color for the bloop overlay.
+    stage.__bloopPx = px;
+    stage.__bloopPulse = T.pulse;
+  }
+
+  // Per-frame overlay: clear main canvas, blit the static cache, draw
+  // the radar bloops. ~100× cheaper than redrawing the whole globe.
+  function drawFrame(s) {
+    const { canvas, ctx, staticCanvas, bloopSites, stage } = s;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(staticCanvas, 0, 0, w, h);
+
+    const px = stage.__bloopPx || 1;
+    const pulse = stage.__bloopPulse || '255,255,255';
+    const PERIOD = 2000;
+    const RINGS = 2;
     const minR = Math.max(3, 4 * px);
     const maxR = Math.max(28, 36 * px);
+    const now = performance.now();
 
-    for (const idx of BLOOP_SITES) {
-      const site = projected[idx];
-      if (!site || site.v.z <= 0) continue;
+    for (const site of bloopSites) {
       for (let i = 0; i < RINGS; i++) {
-        // Each ring offset by 1/RINGS of the period for overlapping waves
-        const t = ((performance.now() / PERIOD) + (i / RINGS)) % 1;
+        const t = ((now / PERIOD) + (i / RINGS)) % 1;
         const ringR = minR + t * (maxR - minR);
-        const alpha = (1 - t) * 0.65;  // fade as ring expands
-
+        const alpha = (1 - t) * 0.65;
         ctx.beginPath();
-        ctx.arc(site.p.x, site.p.y, ringR, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${T.pulse}, ${alpha})`;
+        ctx.arc(site.x, site.y, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${pulse}, ${alpha})`;
         ctx.lineWidth = Math.max(0.9, 1.1 * px);
         ctx.stroke();
       }
     }
-
   }
 
+  // Throttle to ~30fps — the bloop period is 2s, so 30fps still reads
+  // smooth and halves canvas work on low-end TV browsers (OptiSigns etc.).
+  const FRAME_INTERVAL = 1000 / 30;
+  let lastDraw = 0;
   function tick(now) {
-    const dt = (now - lastT) / 1000;
-    lastT = now;
-    // CCW (continents drift right-to-left as viewed from front)
-    rotation -= dt * SPIN_RATE;
-    for (const s of stages) drawOne(s);
+    if (now - lastDraw >= FRAME_INTERVAL) {
+      for (const s of stages) drawFrame(s);
+      lastDraw = now;
+    }
     requestAnimationFrame(tick);
   }
 
