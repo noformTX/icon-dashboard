@@ -875,6 +875,18 @@
     text-transform: uppercase;
   }
 
+  /* Inner clock elements — shared by every clock SVG (zone clocks here;
+     also used by the countdown clock on index.html). */
+  .clock-tick { stroke: var(--text-subtle); stroke-width: 1; }
+  .clock-tick.cardinal { stroke: var(--text-muted); stroke-width: 1.5; }
+  .hand { stroke: var(--text-muted); stroke-linecap: round; }
+  .hand.hour   { stroke-width: 3; }
+  .hand.minute { stroke-width: 2; }
+  .hand.second { stroke-width: 1; stroke: var(--accent); }
+  .clock-pivot { fill: var(--text-muted); }
+  .clock-face  { fill: transparent; }
+  body:not(.dark) .clock-face { fill: #ffffff; }
+
   /* ============================================
      SWIM LANE CHART — Project Tracker (Page 2)
      Continuous flow lines: each project is a single horizontal line from
