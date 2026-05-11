@@ -476,10 +476,12 @@
     70%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
     100% { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
   }
-  /* §6.1 Display tier — 120px Heavy 800 at -0.04em. */
+  /* §6.1 Display tier — 168px Heavy 800 at -0.04em. Sized to use
+     the vertical headroom that opened up when the ticker was removed
+     (cell row grew from ~424px to 456px on Page 2). */
   .hero-num {
     font-family: var(--display);
-    font-size: 120px;
+    font-size: 168px;
     font-weight: 800;
     line-height: 0.84;
     letter-spacing: -0.04em;
@@ -521,12 +523,11 @@
     gap: 24px;
     min-width: 0;
   }
-  /* §6.1 Heading tier — 40px Bold 700 at -0.02em. Sized to 42px to
-     pair visually with the .okr-title on Page 1 without competing
-     with the 256px countdown numeral for focal weight. */
+  /* §6.1 Heading tier — Bold 700 at -0.02em. Bumped to 56px to pair
+     with the larger 168px hero numeral after the ticker removal. */
   .project-title {
     font-family: var(--display);
-    font-size: 42px;
+    font-size: 56px;
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.02em;
@@ -2006,11 +2007,13 @@
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
 
-    // Globe centered; chips flank left/right with horizontal margin
-    const SIDE_RESERVE = 130;
+    // Globe centered; chips flank left/right with horizontal margin.
+    // SIDE_RESERVE = chip-column width; tighter reserve lets the globe
+    // grow into the now-wider panel after the ticker came out.
+    const SIDE_RESERVE = 100;
     const cx = w / 2;
     const cy = h / 2;
-    const r  = Math.min((w - SIDE_RESERVE * 2) * 0.5, h * 0.56);
+    const r  = Math.min((w - SIDE_RESERVE * 2) * 0.5, h * 0.6);
     const px = r / 220;
 
     ctx.clearRect(0, 0, w, h);
