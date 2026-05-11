@@ -1024,7 +1024,12 @@
   .swim-grid.fill-active .swim-line {
     animation: swim-line-fill 1100ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) forwards;
   }
+  /* Entrance — every leading dot fades in once. */
   .swim-grid.fill-active .swim-leading {
+    animation: swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards;
+  }
+  /* Pulse — only completed rows continue to ping after entrance. */
+  .swim-grid.fill-active .swim-row.complete .swim-leading {
     animation:
       swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards,
       swim-leading-pulse 2s ease-out calc(var(--d, 0s) + 1.4s) infinite;
