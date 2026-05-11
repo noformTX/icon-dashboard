@@ -1272,12 +1272,10 @@
     </div>
   </div>
 
-  <!-- ===================== TICKER ===================== -->
-  <div class="ticker">
-    <div class="ticker-window">
-      <div class="ticker-track" id="ticker-track"></div>
-    </div>
-  </div>
+  <!-- Bottom ticker removed for streaming-target FPS — continuous CSS
+       transform animation was forcing compositor work behind every
+       other paint. Add `<div class="ticker">...</div>` back here to
+       re-enable. -->
 
 </div>
 
@@ -1702,7 +1700,7 @@
   // INIT + INTERVALS
   // ============================================
   updateClock();
-  renderTicker();
+  // renderTicker(); — ticker removed from this deliverable, see HTML.
   renderTracker();
   renderProjectDetail();
 
