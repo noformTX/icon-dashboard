@@ -467,10 +467,15 @@
     color: var(--g10);
     border-color: var(--status-on);
   }
-  .project-detail.fill-active .phase-chip.leading {
+  /* Phase-leading-pulse disabled for streaming target — infinite
+     box-shadow keyframes force compositor work every frame and tank
+     FPS on OptiSigns-class hardware. Leading chip still reads as
+     accent-green so the semantic cue survives. Re-enable by
+     restoring the animation property. */
+  /* .project-detail.fill-active .phase-chip.leading {
     animation: phase-leading-pulse 2s ease-out infinite;
     animation-delay: calc(var(--d, 0s) + 600ms);
-  }
+  } */
   @keyframes phase-leading-pulse {
     0%   { box-shadow: 0 0 0 0   rgba(74, 222, 128, 0.55); }
     70%  { box-shadow: 0 0 0 14px rgba(74, 222, 128, 0); }
@@ -1030,12 +1035,16 @@
   .swim-grid.fill-active .swim-leading {
     animation: swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards;
   }
-  /* Pulse — only completed rows continue to ping after entrance. */
-  .swim-grid.fill-active .swim-row.complete .swim-leading {
+  /* Swim-leading-pulse disabled for streaming target — same reason
+     as phase-leading-pulse: infinite box-shadow keyframes are
+     compositor-expensive. Mueller + CFV Tranche 1 still read as
+     completed via the green line/dot color. Re-enable by restoring
+     the second animation. */
+  /* .swim-grid.fill-active .swim-row.complete .swim-leading {
     animation:
       swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards,
       swim-leading-pulse 2s ease-out calc(var(--d, 0s) + 1.4s) infinite;
-  }
+  } */
   @keyframes swim-line-fill {
     from { width: 0; }
     to   { width: var(--p, 0%); }
@@ -2198,53 +2207,22 @@
     stage.__bloopPulse = T.pulse;
   }
 
-  // Per-frame overlay: clear main canvas, blit the static cache, draw
-  // the radar bloops. ~100× cheaper than redrawing the whole globe.
-  function drawFrame(s) {
-    const { canvas, ctx, staticCanvas, bloopSites, stage } = s;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(staticCanvas, 0, 0, w, h);
-
-    const px = stage.__bloopPx || 1;
-    const pulse = stage.__bloopPulse || '255,255,255';
-    const PERIOD = 2000;
-    const RINGS = 2;
-    const minR = Math.max(3, 4 * px);
-    const maxR = Math.max(28, 36 * px);
-    const now = performance.now();
-
-    for (const site of bloopSites) {
-      for (let i = 0; i < RINGS; i++) {
-        const t = ((now / PERIOD) + (i / RINGS)) % 1;
-        const ringR = minR + t * (maxR - minR);
-        const alpha = (1 - t) * 0.65;
-        ctx.beginPath();
-        ctx.arc(site.x, site.y, ringR, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${pulse}, ${alpha})`;
-        ctx.lineWidth = Math.max(0.9, 1.1 * px);
-        ctx.stroke();
-      }
-    }
-  }
-
-  // setInterval at 50ms (20fps) instead of requestAnimationFrame —
-  // bloop period is 2s so 20fps is plenty smooth, and we stop firing
-  // a rAF callback at the display refresh rate (60-120Hz) just to
-  // gate it down. Also skips drawing entirely while Page 1 is
-  // off-screen (orchestration translates the pages-track during the
-  // project-detail slide), so the globe canvas isn't repainting for
-  // a panel nobody can see.
-  const pagesTrack = document.getElementById('pages-track');
-  function tick() {
-    if (pagesTrack.classList.contains('page-1')) return;  // Page 1 off-screen
-    for (const s of stages) drawFrame(s);
+  // Final-frame copy: blit the static cache to the main canvas once
+  // and stop. No per-frame canvas work whatsoever. The radar bloops
+  // on Austin + Miami are deferred to a CSS overlay below (cheap
+  // GPU-composited keyframes instead of canvas redraws).
+  function paintOnce(s) {
+    const { canvas, ctx, staticCanvas } = s;
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    ctx.drawImage(staticCanvas, 0, 0, canvas.clientWidth, canvas.clientHeight);
   }
 
   fitAll();
-  window.addEventListener('resize', fitAll);
-  setInterval(tick, 50);
+  for (const s of stages) paintOnce(s);
+  window.addEventListener('resize', () => {
+    fitAll();
+    for (const s of stages) paintOnce(s);
+  });
 })();
 </script>
 </body>
