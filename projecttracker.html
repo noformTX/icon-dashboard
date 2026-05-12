@@ -1004,23 +1004,24 @@
     position: absolute;
     left: 0;
     top: 50%;
-    height: 2px;
+    height: 4px;
     width: var(--p, 0%);
     background: linear-gradient(to right,
       rgba(var(--swim-rgb), 0.10),
       rgba(var(--swim-rgb), 1.0));
     transform: translateY(-50%);
-    border-radius: 1px;
+    border-radius: 2px;
   }
 
   /* Leading-edge dot — sits at the end of the line. Renders solid;
-     no fade-in animation on Page 1 entry. */
+     no fade-in animation on Page 1 entry. Sized to read clearly at
+     the end of the thicker swim-line. */
   .swim-leading {
     position: absolute;
     top: 50%;
     left: var(--p, 0%);
-    width: 7px;
-    height: 7px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: rgb(var(--swim-rgb));
     transform: translate(-50%, -50%);
