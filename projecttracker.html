@@ -1229,8 +1229,6 @@
         <span class="cell-meta">9 Active Sites</span>
       </header>
       <div class="globe-stage" data-theme="night">
-        <div class="chip-col" data-side="left"  data-chip-col="left"></div>
-        <div class="chip-col" data-side="right" data-chip-col="right"></div>
         <canvas class="globe"></canvas>
       </div>
       <div class="zone-clocks" id="zone-clocks"></div>
@@ -1814,104 +1812,26 @@
 </script>
 
 <script>
+/* ============================================================
+   PRINT NETWORK GLOBE — implementation from Globe.html
+   (design handoff bundle, print-locations/project/Globe.html).
+   Permanently fixed left/right column labels rendered into the
+   canvas; S-curve bezier leader lines connect chip-end dots to
+   the moving globe pins; active prints get accent leader + accent
+   center dot + radar pulse.
+   ============================================================ */
 (() => {
-  // Active ICON print site locations [lat, lng, label]
-  const SITES = [
-    [30.2672,  -97.7431, 'Austin, TX'],
-    [31.5494,  -97.1467, 'Waco, TX'],
-    [32.7767,  -96.7970, 'Dallas, TX'],
-    [31.5493, -106.4424, 'Fort Bliss, TX'],
-    [25.7617,  -80.1918, 'Miami, FL'],
-    [26.1224,  -80.1373, 'Ft Lauderdale, FL'],
-    [34.2257,  -77.9447, 'Wilmington, NC'],
-    [35.1495,  -90.0490, 'Memphis, TN'],
-    [40.6936,  -89.5890, 'Peoria, IL'],
-    [42.0308,  -93.6319, 'Ames, IA']
-  ];
-  const EARTH_SITES = SITES;
+  const ACCENT_RGB = '255, 79, 0';
 
-  // Distribute chips geographically: split by longitude (west→left, east→right),
-  // then sort each column N→S by latitude. The dataset.chipIdx still points
-  // back to the original SITES index so the tether-to-pin lookup stays valid.
-  document.querySelectorAll('.globe-stage').forEach(stage => {
-    const left  = stage.querySelector('[data-chip-col="left"]');
-    const right = stage.querySelector('[data-chip-col="right"]');
-
-    // Split by longitude (west = lower/more negative)
-    const indexed = EARTH_SITES.map((site, idx) => ({ site, idx }));
-    indexed.sort((a, b) => a.site[1] - b.site[1]);  // ascending lng = west→east
-    const half = Math.ceil(indexed.length / 2);
-    const leftCol  = indexed.slice(0, half);
-    const rightCol = indexed.slice(half);
-
-    // Sort each column N→S (descending latitude) for vertical reading order
-    leftCol.sort((a, b)  => b.site[0] - a.site[0]);
-    rightCol.sort((a, b) => b.site[0] - a.site[0]);
-
-    function appendChip(container, side, { site, idx }) {
-      const el = document.createElement('div');
-      el.className = 'chip';
-      el.dataset.chipIdx = idx;
-      el.dataset.side = side;
-      el.innerHTML = site[2];
-      container.appendChild(el);
-    }
-    leftCol.forEach (entry => appendChip(left,  'left',  entry));
-    rightCol.forEach(entry => appendChip(right, 'right', entry));
-  });
-
-  // ────────────────────────────────────────────────────────────────
-  // Theme palettes
-  const THEMES = {
-    night: {
-      base: '255, 255, 255',
-      limb: 0.30, latGrid: 0.15, latEq: 0.30, lngGrid: 0.15, lngPM: 0.30,
-      contMin: 0.17, contRange: 0.28,
-      pinFill: '#FFFFFF', pinStroke: 'rgba(255,255,255,0)',
-      glowInner: 'rgba(255,255,255,0.45)', glowOuter: 'rgba(255,255,255,0)',
-      pulse: '255, 255, 255',
-      tetherFront: 'rgba(255,79,0,0.85)',
-      tetherBack:  'rgba(255,255,255,0.10)'
-    },
-    day: {
-      base: '26, 26, 26',
-      limb: 0.55, latGrid: 0.22, latEq: 0.45, lngGrid: 0.22, lngPM: 0.45,
-      contMin: 0.30, contRange: 0.45,
-      pinFill: '#1A1A1A', pinStroke: 'rgba(0,0,0,0)',
-      glowInner: 'rgba(0,0,0,0.35)', glowOuter: 'rgba(0,0,0,0)',
-      pulse: '26, 26, 26',
-      tetherFront: 'rgba(255,79,0,0.95)',
-      tetherBack:  'rgba(26,26,26,0.10)'
-    }
-  };
-  function themeFor(canvas) {
-    const host = canvas.closest('[data-theme]');
-    const name = (host && host.getAttribute('data-theme')) || 'night';
-    return THEMES[name] || THEMES.night;
-  }
-
-  // ────────────────────────────────────────────────────────────────
-  // Continent silhouettes (sampled as dots)
+  // ----- Continent polys + land sampling (lifted from Globe.html) -----
   const CONTINENTS = [
-    [[-168,65],[-160,71],[-140,72],[-125,71],[-105,72],[-85,75],[-70,70],[-65,60],
-     [-55,52],[-65,48],[-55,45],[-65,42],[-75,36],[-80,32],[-82,27],[-80,25],[-87,21],
-     [-90,18],[-95,16],[-100,17],[-105,21],[-115,28],[-118,32],[-122,38],[-124,45],
-     [-125,50],[-135,57],[-150,60],[-160,62],[-168,65]],
+    [[-168,65],[-160,71],[-140,72],[-125,71],[-105,72],[-85,75],[-70,70],[-65,60],[-55,52],[-65,48],[-55,45],[-65,42],[-75,36],[-80,32],[-82,27],[-80,25],[-87,21],[-90,18],[-95,16],[-100,17],[-105,21],[-115,28],[-118,32],[-122,38],[-124,45],[-125,50],[-135,57],[-150,60],[-160,62],[-168,65]],
     [[-55,60],[-30,60],[-22,73],[-30,82],[-55,82],[-55,60]],
-    [[-80,11],[-72,12],[-60,10],[-50,6],[-35,-5],[-35,-12],[-40,-22],[-50,-32],
-     [-58,-38],[-65,-50],[-72,-53],[-75,-50],[-73,-40],[-72,-28],[-78,-15],[-80,-5],
-     [-78,2],[-80,11]],
-    [[-17,14],[-17,30],[-10,33],[0,36],[10,37],[18,33],[25,32],[33,32],[35,28],
-     [42,18],[51,12],[51,6],[42,-2],[40,-12],[37,-20],[32,-26],[20,-35],[18,-35],
-     [14,-22],[12,-5],[8,5],[-5,5],[-10,8],[-15,12],[-17,14]],
-    [[-10,36],[-5,36],[3,42],[10,44],[18,40],[25,38],[28,40],[35,40],[40,45],
-     [40,60],[30,70],[10,70],[5,60],[-5,55],[-8,50],[-10,43],[-10,36]],
-    [[40,40],[45,38],[55,30],[60,25],[55,20],[50,12],[60,8],[70,8],[78,8],[90,22],
-     [97,15],[100,8],[105,5],[108,12],[115,18],[122,25],[130,30],[140,35],[145,42],
-     [155,52],[170,65],[180,68],[180,75],[140,77],[100,77],[60,75],[40,68],[35,60],
-     [35,50],[40,40]],
-    [[115,-12],[130,-12],[140,-10],[145,-13],[153,-25],[150,-38],[140,-38],
-     [125,-35],[115,-35],[113,-25],[115,-12]],
+    [[-80,11],[-72,12],[-60,10],[-50,6],[-35,-5],[-35,-12],[-40,-22],[-50,-32],[-58,-38],[-65,-50],[-72,-53],[-75,-50],[-73,-40],[-72,-28],[-78,-15],[-80,-5],[-78,2],[-80,11]],
+    [[-17,14],[-17,30],[-10,33],[0,36],[10,37],[18,33],[25,32],[33,32],[35,28],[42,18],[51,12],[51,6],[42,-2],[40,-12],[37,-20],[32,-26],[20,-35],[18,-35],[14,-22],[12,-5],[8,5],[-5,5],[-10,8],[-15,12],[-17,14]],
+    [[-10,36],[-5,36],[3,42],[10,44],[18,40],[25,38],[28,40],[35,40],[40,45],[40,60],[30,70],[10,70],[5,60],[-5,55],[-8,50],[-10,43],[-10,36]],
+    [[40,40],[45,38],[55,30],[60,25],[55,20],[50,12],[60,8],[70,8],[78,8],[90,22],[97,15],[100,8],[105,5],[108,12],[115,18],[122,25],[130,30],[140,35],[145,42],[155,52],[170,65],[180,68],[180,75],[140,77],[100,77],[60,75],[40,68],[35,60],[35,50],[40,40]],
+    [[115,-12],[130,-12],[140,-10],[145,-13],[153,-25],[150,-38],[140,-38],[125,-35],[115,-35],[113,-25],[115,-12]],
     [[43,-12],[50,-15],[50,-25],[44,-25],[42,-18],[43,-12]],
     [[130,32],[140,38],[145,45],[140,42],[135,34],[130,32]],
     [[-10,50],[-2,50],[1,53],[-3,58],[-7,55],[-10,50]],
@@ -1924,9 +1844,7 @@
       const xi = poly[i][0], yi = poly[i][1];
       const xj = poly[j][0], yj = poly[j][1];
       if (((yi > lat) !== (yj > lat)) &&
-          (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-        inside = !inside;
-      }
+          (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
     }
     return inside;
   }
@@ -1939,8 +1857,7 @@
   }
   const LAND_DOTS = (() => {
     const dots = [];
-    const STEP = 4;
-    for (let lat = -86; lat <= 86; lat += STEP) {
+    for (let lat = -86; lat <= 86; lat += 4) {
       const cols = Math.max(8, Math.round(54 * Math.cos(lat * Math.PI / 180)));
       for (let i = 0; i < cols; i++) {
         const lng = -180 + (360 * i / cols);
@@ -1950,10 +1867,8 @@
     return dots;
   })();
 
-  // ────────────────────────────────────────────────────────────────
-  // 3D math
   function latLngToVec(lat, lng) {
-    const phi   = (90 - lat) * Math.PI / 180;
+    const phi = (90 - lat) * Math.PI / 180;
     const theta = (lng + 180) * Math.PI / 180;
     return {
       x: -Math.sin(phi) * Math.cos(theta),
@@ -1961,255 +1876,270 @@
       z:  Math.sin(phi) * Math.sin(theta)
     };
   }
-  function rotateY(v, a) {
-    const c = Math.cos(a), s = Math.sin(a);
-    return { x: v.x * c + v.z * s, y: v.y, z: -v.x * s + v.z * c };
-  }
-  function rotateX(v, a) {
-    const c = Math.cos(a), s = Math.sin(a);
-    return { x: v.x, y: v.y * c - v.z * s, z: v.y * s + v.z * c };
-  }
-  function project(v, cx, cy, r) {
-    return { x: cx + v.x * r, y: cy - v.y * r, z: v.z };
-  }
+  const rotY = (v,a)=>{const c=Math.cos(a),s=Math.sin(a);return{x:v.x*c+v.z*s,y:v.y,z:-v.x*s+v.z*c};};
+  const rotX = (v,a)=>{const c=Math.cos(a),s=Math.sin(a);return{x:v.x,y:v.y*c-v.z*s,z:v.y*s+v.z*c};};
+  const project = (v,cx,cy,r)=>({x:cx+v.x*r,y:cy-v.y*r,z:v.z});
 
-  // Slow CCW spin. SPIN_RATE picked so a full rotation takes ~2 minutes
-  // — stately enough to read as "alive" without demanding a high
-  // framerate. Combined with the 10fps redraw cadence below, this
-  // costs ~6 globe re-renders/second instead of the original 60+.
-  const TILT = 0.54;
-  const SPIN_RATE = 0.05;       // rad/sec
-  let rotation = -0.047;        // initial — centers continental US
+  // ----- ICON print network sites: [lat, lng, label, status] -----
+  // Status drives leader color, pin core, and radar pulse.
+  // Active: Waco, Fort Bliss, Austin, Ft Lauderdale (per chat handoff).
+  const SITES = [
+    // LEFT COLUMN (top → bottom)
+    [42.0308,  -93.6319, 'Ames, IA',          'partner'  ],  // 0
+    [32.7767,  -96.7970, 'Dallas, TX',        'completed'],  // 1
+    [31.5494,  -97.1467, 'Waco, TX',          'active'   ],  // 2
+    [31.5493, -106.4424, 'Fort Bliss, TX',    'active'   ],  // 3
+    [30.2672,  -97.7431, 'Austin, TX',        'active'   ],  // 4
+    // RIGHT COLUMN (top → bottom)
+    [40.6936,  -89.5890, 'Peoria, IL',        'completed'],  // 5
+    [35.1495,  -90.0490, 'Memphis, TN',       'completed'],  // 6
+    [34.2257,  -77.9447, 'Wilmington, NC',    'completed'],  // 7
+    [26.1224,  -80.1373, 'Ft Lauderdale, FL', 'active'   ],  // 8
+    [25.7617,  -80.1918, 'Miami, FL',         'completed']   // 9
+  ];
+  const SITE_LAYOUT = {
+    left:  [0, 1, 2, 3, 4],
+    right: [5, 6, 7, 8, 9]
+  };
 
-  // ────────────────────────────────────────────────────────────────
-  // Render setup — one entry per stage. No offscreen cache: rotation
-  // changes every tick so a cache would be invalidated immediately.
-  // Drawing straight to the main canvas at low fps is cheaper than
-  // double-buffering through an offscreen ctx.
-  const stages = Array.from(document.querySelectorAll('.globe-stage')).map(stage => {
-    const canvas = stage.querySelector('canvas.globe');
-    const ctx = canvas.getContext('2d');
-    return { stage, canvas, ctx };
-  });
+  // Fixed tweakable params (the design exposed these via React tweaks;
+  // we hardcode the user's final values + perf-tuned spin/dpr).
+  const TILT       = 32 * Math.PI / 180;   // 32°
+  const GRID_STEP  = 20;                   // 20° lat/lng grid
+  const SCALE      = 0.56;                 // r = min(w,h) * 0.5 * SCALE
+  const LINE_W     = 1;
+  const SPIN_RATE  = 0.05;                 // rad/sec — slow for streaming target
+  const TICK_MS    = 100;                  // 10fps redraw
 
-  function fitAll() {
-    // Cap dpr at 1 — globe is small (~260px) and viewed from across the
-    // room on a TV; HiDPI buffers (dpr 2-3 on 4K) blow up memory and
-    // per-frame redraw cost for zero perceptible gain.
+  let rotation = -0.047;
+
+  const canvas = document.querySelector('.globe-stage canvas.globe');
+  const ctx = canvas.getContext('2d');
+
+  function fit() {
+    // dpr capped at 1 — viewing distance + panel size mean HiDPI buffer
+    // is wasted memory/cost on a streaming TV browser.
     const dpr = Math.min(window.devicePixelRatio || 1, 1);
-    for (const s of stages) {
-      const { canvas, ctx } = s;
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
-      canvas.width  = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function drawGlobe({ stage, canvas, ctx }) {
-    const T = themeFor(canvas);
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-
-    // Globe centered; chips flank left/right with horizontal margin.
-    // SIDE_RESERVE = chip-column width; tighter reserve lets the globe
-    // grow into the now-wider panel after the ticker came out.
-    const SIDE_RESERVE = 100;
-    const cx = w / 2;
-    const cy = h / 2;
-    const r  = Math.min((w - SIDE_RESERVE * 2) * 0.5, h * 0.6);
+  function draw() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    const cx = w / 2, cy = h / 2;
+    const r = Math.min(w, h) * 0.5 * SCALE;
     const px = r / 220;
 
     ctx.clearRect(0, 0, w, h);
 
     // Limb
-    ctx.strokeStyle = `rgba(${T.base},${T.limb})`;
-    ctx.lineWidth = Math.max(1, 1.2 * px);
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = Math.max(1, 1.2 * px * LINE_W);
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Latitudes (back-face culled)
     const SEGMENTS = 96;
-    const FRONT_EPS = 0.0;
-    for (let lat = -60; lat <= 60; lat += 20) {
+
+    // Latitudes
+    for (let lat = -80; lat <= 80; lat += GRID_STEP) {
       ctx.beginPath();
       let pen = false;
       for (let i = 0; i <= SEGMENTS; i++) {
         const lng = -180 + (360 * i / SEGMENTS);
         let v = latLngToVec(lat, lng);
-        v = rotateY(v, rotation);
-        v = rotateX(v, TILT);
+        v = rotY(v, rotation);
+        v = rotX(v, TILT);
         const p = project(v, cx, cy, r);
-        if (v.z > FRONT_EPS) {
+        if (v.z > 0) {
           if (!pen) { ctx.moveTo(p.x, p.y); pen = true; }
           else      { ctx.lineTo(p.x, p.y); }
-        } else {
-          pen = false;
-        }
+        } else pen = false;
       }
       const isEq = lat === 0;
-      ctx.strokeStyle = `rgba(${T.base},${isEq ? T.latEq : T.latGrid})`;
-      ctx.lineWidth = Math.max(0.8, (isEq ? 1.3 : 1.0) * px);
+      ctx.strokeStyle = isEq ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = Math.max(0.7, (isEq ? 1.3 : 1.0) * px * LINE_W);
       ctx.stroke();
     }
 
     // Longitudes
-    for (let lng = -180; lng < 180; lng += 20) {
+    for (let lng = -180; lng < 180; lng += GRID_STEP) {
       ctx.beginPath();
       let pen = false;
       for (let i = 0; i <= SEGMENTS; i++) {
         const lat = -90 + (180 * i / SEGMENTS);
         let v = latLngToVec(lat, lng);
-        v = rotateY(v, rotation);
-        v = rotateX(v, TILT);
+        v = rotY(v, rotation);
+        v = rotX(v, TILT);
         const p = project(v, cx, cy, r);
-        if (v.z > FRONT_EPS) {
+        if (v.z > 0) {
           if (!pen) { ctx.moveTo(p.x, p.y); pen = true; }
           else      { ctx.lineTo(p.x, p.y); }
-        } else {
-          pen = false;
-        }
+        } else pen = false;
       }
       const isPM = lng === 0;
-      ctx.strokeStyle = `rgba(${T.base},${isPM ? T.lngPM : T.lngGrid})`;
-      ctx.lineWidth = Math.max(0.7, (isPM ? 1.1 : 0.9) * px);
+      ctx.strokeStyle = isPM ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = Math.max(0.6, (isPM ? 1.1 : 0.9) * px * LINE_W);
       ctx.stroke();
     }
 
-    // Continent dots
+    // Project site positions
+    const projectedSites = SITES.map(([lat, lng, label, status]) => {
+      let v = latLngToVec(lat, lng);
+      v = rotY(v, rotation);
+      v = rotX(v, TILT);
+      return { p: project(v, cx, cy, r), v, label, status };
+    });
+
+    // Continent dot field (back-face culled)
     for (let i = 0; i < LAND_DOTS.length; i++) {
       const [lat, lng] = LAND_DOTS[i];
       let v = latLngToVec(lat, lng);
-      v = rotateY(v, rotation);
-      v = rotateX(v, TILT);
+      v = rotY(v, rotation);
+      v = rotX(v, TILT);
       if (v.z <= 0) continue;
       const p = project(v, cx, cy, r);
-      const t = v.z;
-      const alpha = T.contMin + t * T.contRange;
-      const radius = Math.max(0.9, (1.0 + t * 0.9) * px);
+      const alpha = 0.20 + v.z * 0.35;
+      const radius = Math.max(0.9, (1.0 + v.z * 0.9) * px);
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${T.base},${alpha})`;
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
       ctx.fill();
     }
 
-    // Project pins
-    const projected = EARTH_SITES.map(([lat, lng, label]) => {
-      let v = latLngToVec(lat, lng);
-      v = rotateY(v, rotation);
-      v = rotateX(v, TILT);
-      const p = project(v, cx, cy, r);
-      return { p, v, label };
-    });
+    // Callouts — fixed left/right column slots; bezier endpoints follow
+    // the moving globe dot, labels stay anchored to the page margin.
+    const MARGIN = 30;
+    const colXLeft  = MARGIN;
+    const colXRight = w - MARGIN;
+    const yTop = Math.max(40, cy - r * 1.05);
+    const yBot = Math.min(h - 40, cy + r * 1.05);
 
-    // Connector tethers — chip → pin. Drawn before pins so pins sit on top.
-    //
-    // Coordinate strategy: the dashboard's parent has transform: scale() to
-    // fit viewport. getBoundingClientRect() returns POST-transform coords;
-    // canvas drawing happens in PRE-transform layout pixels. To stay in the
-    // canvas's coordinate space, we use offsetLeft/Top/Width/Height, which
-    // are pure CSS layout pixels — unaffected by ancestor transforms.
-    //
-    // Walk up the offsetParent chain from chip → ... → stage, summing
-    // offsets to get the chip's position relative to stage in layout space.
-    const chips = stage.querySelectorAll('[data-chip-idx]');
-    chips.forEach(chip => {
-      const idx = +chip.dataset.chipIdx;
-      const pin = projected[idx];
-      if (!pin) return;
+    ctx.font = '600 11px "Roboto Mono", ui-monospace, monospace';
+    ctx.textBaseline = 'middle';
 
-      // Accumulate offsets up to the stage
-      let xOff = 0, yOff = 0, node = chip;
-      while (node && node !== stage) {
-        xOff += node.offsetLeft;
-        yOff += node.offsetTop;
-        node = node.offsetParent;
-      }
-      const cw = chip.offsetWidth;
-      const ch = chip.offsetHeight;
-      const side = chip.dataset.side; // 'left' or 'right'
+    const buildCol = idxList => idxList.map(idx => ({
+      s: projectedSites[idx],
+      label: projectedSites[idx].label,
+      status: projectedSites[idx].status
+    }));
+    const leftCol  = buildCol(SITE_LAYOUT.left);
+    const rightCol = buildCol(SITE_LAYOUT.right);
 
-      // Anchor at chip's inner edge (right edge for left col, left edge for
-      // right col), vertically centered on chip box.
-      const ax = side === 'left' ? xOff + cw : xOff;
-      const ay = yOff + ch / 2;
+    const drawColumn = (col, marginX, rightAligned) => {
+      col.forEach((entry, i) => {
+        const t = col.length === 1 ? 0.5 : i / (col.length - 1);
+        const chipY = yTop + (yBot - yTop) * t;
+        const s = entry.s;
+        const isActive = entry.status === 'active';
+        const onFront = s.v.z > 0;
 
-      const onFront = pin.v.z > 0;
-      // Bezier control points biased horizontally so curve sweeps cleanly
-      // from the chip's flank toward the pin on the globe.
-      const dx = pin.p.x - ax;
-      const dy = pin.p.y - ay;
-      const c1x = ax + dx * 0.55;
-      const c1y = ay;
-      const c2x = pin.p.x - dx * 0.30;
-      const c2y = pin.p.y - dy * 0.20;
+        const text = entry.label.toUpperCase();
+        const textW = ctx.measureText(text).width;
+        const GAP = 8;
+        const dotX = rightAligned
+          ? marginX - textW - GAP
+          : marginX + textW + GAP;
 
-      // Tether stroke matches the project tracker swim line — comet-tail
-      // gradient from faint at the chip anchor to full at the pin (the pin
-      // itself plays the role of the swim's leading-edge dot). Back-facing
-      // tethers stay dashed for depth, but use the same accent so the
-      // palette reads as one system across both panels.
-      ctx.beginPath();
-      ctx.moveTo(ax, ay);
-      ctx.bezierCurveTo(c1x, c1y, c2x, c2y, pin.p.x, pin.p.y);
-      if (onFront) {
-        const grad = ctx.createLinearGradient(ax, ay, pin.p.x, pin.p.y);
-        grad.addColorStop(0, 'rgba(255, 79, 0, 0.10)');
-        grad.addColorStop(1, 'rgba(255, 79, 0, 1.00)');
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = Math.max(1.5, 1.5 * px);
-      } else {
-        ctx.strokeStyle = 'rgba(255, 79, 0, 0.18)';
-        ctx.lineWidth = Math.max(0.9, 1.0 * px);
-        ctx.setLineDash([3 * px, 4 * px]);
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    });
+        // S-curve bezier — leader only when site is front-facing
+        if (onFront) {
+          const sourceX = s.p.x, sourceY = s.p.y;
+          const midX = (sourceX + dotX) / 2;
+          const ctrl1X = midX, ctrl1Y = sourceY;
+          const ctrl2X = midX, ctrl2Y = chipY;
 
-    // Front-facing pins
-    projected
-      .slice()
-      .sort((a, b) => a.v.z - b.v.z)
-      .forEach(({ p, v }) => {
-        if (v.z <= 0) return;
+          const grad = ctx.createLinearGradient(sourceX, sourceY, dotX, chipY);
+          if (isActive) {
+            grad.addColorStop(0, `rgba(${ACCENT_RGB}, 0.20)`);
+            grad.addColorStop(1, `rgba(${ACCENT_RGB}, 1.00)`);
+          } else {
+            grad.addColorStop(0, 'rgba(255,255,255,0.20)');
+            grad.addColorStop(1, 'rgba(255,255,255,0.75)');
+          }
+          ctx.beginPath();
+          ctx.moveTo(sourceX, sourceY);
+          ctx.bezierCurveTo(ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, dotX, chipY);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = Math.max(0.9, 1.0 * px);
+          ctx.stroke();
+        }
 
-        const dotR = Math.max(2.6, 3.2 * px);
+        // Status dot at label's inner edge
         ctx.beginPath();
-        ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
-        ctx.fillStyle = T.pinFill;
+        ctx.arc(dotX, chipY, Math.max(2.4, 2.6 * px), 0, Math.PI * 2);
+        if (!onFront) {
+          ctx.fillStyle = 'rgba(255,255,255,0.30)';
+        } else {
+          ctx.fillStyle = isActive ? `rgba(${ACCENT_RGB}, 1)` : 'rgba(255,255,255,0.9)';
+        }
         ctx.fill();
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
-        ctx.strokeStyle = T.pinStroke;
-        ctx.lineWidth = Math.max(0.7, 0.8 * px);
-        ctx.stroke();
+        // Mono label — anchored to page margin
+        ctx.textAlign = rightAligned ? 'right' : 'left';
+        ctx.fillStyle = onFront
+          ? (isActive ? '#FFFFFF' : 'rgba(255,255,255,0.92)')
+          : 'rgba(255,255,255,0.30)';
+        ctx.fillText(text, marginX, chipY);
       });
+    };
 
+    drawColumn(leftCol,  colXLeft,  false);
+    drawColumn(rightCol, colXRight, true);
+
+    // Site pins — white dot with soft halo; accent core for active prints
+    projectedSites.slice().sort((a, b) => a.v.z - b.v.z).forEach(({ p, v, status }) => {
+      if (v.z <= 0) return;
+      const dotR = Math.max(2.6, 3.4 * px);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, dotR + 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      if (status === 'active') {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(1.4, 1.6 * px), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${ACCENT_RGB},1)`;
+        ctx.fill();
+      }
+    });
+
+    // Radar pulse on active sites — drives all per-frame canvas work
+    // even when rotation is paused, so the dashboard reads as live.
+    const PERIOD = 2200, RINGS = 2;
+    const minR = Math.max(4, 4.5 * px), maxR = Math.max(28, 38 * px);
+    const now = performance.now();
+    projectedSites.forEach(({ p, v, status }) => {
+      if (status !== 'active' || v.z <= 0) return;
+      for (let i = 0; i < RINGS; i++) {
+        const t = ((now / PERIOD) + (i / RINGS)) % 1;
+        const ringR = minR + t * (maxR - minR);
+        const alpha = (1 - t) * 0.55;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, ringR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${ACCENT_RGB}, ${alpha})`;
+        ctx.lineWidth = Math.max(0.9, 1.1 * px);
+        ctx.stroke();
+      }
+    });
   }
 
-  // 10fps redraw tick — globe re-renders six times per second instead of
-  // sixty. Pause the redraw when Page 1 is off-screen (translateX moves
-  // the tracker+globe panel out of view during the project-detail page),
-  // so the canvas is idle for the entire ~25s Page 2 hold.
+  // 10fps tick — pauses when Page 1 is off-screen (translateX during
+  // the project-detail page hold).
   const pagesTrack = document.getElementById('pages-track');
-  const TICK_MS = 100;
   function tick() {
-    if (pagesTrack.classList.contains('page-1')) return;  // Page 1 off-screen
-    rotation -= SPIN_RATE * (TICK_MS / 1000);  // CCW drift
-    for (const s of stages) drawGlobe(s);
+    if (pagesTrack.classList.contains('page-1')) return;
+    rotation -= SPIN_RATE * (TICK_MS / 1000);
+    draw();
   }
 
-  function paintAll() {
-    for (const s of stages) drawGlobe(s);
-  }
-
-  fitAll();
-  paintAll();
-  window.addEventListener('resize', () => { fitAll(); paintAll(); });
+  fit();
+  draw();
+  window.addEventListener('resize', () => { fit(); draw(); });
   setInterval(tick, TICK_MS);
 })();
 </script>
