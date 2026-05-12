@@ -1973,48 +1973,41 @@
     return { x: cx + v.x * r, y: cy - v.y * r, z: v.z };
   }
 
-  // Globe is locked in place — no spin. Rotation is set once to center
-  // the US print-site cluster on the front of the globe. The static
-  // globe surface is rendered once into an offscreen canvas (see below);
-  // per frame, we blit the cache and draw only the Austin/Miami radar
-  // bloops on top. ~100× cheaper than redrawing the whole globe at 60fps.
+  // Slow CCW spin. SPIN_RATE picked so a full rotation takes ~2 minutes
+  // — stately enough to read as "alive" without demanding a high
+  // framerate. Combined with the 10fps redraw cadence below, this
+  // costs ~6 globe re-renders/second instead of the original 60+.
   const TILT = 0.54;
-  const rotation = -0.047;   // fixed; centers continental US
+  const SPIN_RATE = 0.05;       // rad/sec
+  let rotation = -0.047;        // initial — centers continental US
 
   // ────────────────────────────────────────────────────────────────
-  // Render setup — one entry per stage. With rotation locked, the globe
-  // surface (limb, grid, continent dots, pins, tethers) is fully static.
-  // We render it once to an offscreen canvas (staticCanvas) and blit it
-  // every frame, then draw only the radar bloops on top. This avoids
-  // re-running thousands of latLngToVec/rotate/project calls per frame.
+  // Render setup — one entry per stage. No offscreen cache: rotation
+  // changes every tick so a cache would be invalidated immediately.
+  // Drawing straight to the main canvas at low fps is cheaper than
+  // double-buffering through an offscreen ctx.
   const stages = Array.from(document.querySelectorAll('.globe-stage')).map(stage => {
     const canvas = stage.querySelector('canvas.globe');
     const ctx = canvas.getContext('2d');
-    const staticCanvas = document.createElement('canvas');
-    const staticCtx = staticCanvas.getContext('2d');
-    return { stage, canvas, ctx, staticCanvas, staticCtx, bloopSites: [], bloopPx: 1 };
+    return { stage, canvas, ctx };
   });
 
   function fitAll() {
     // Cap dpr at 1 — globe is small (~260px) and viewed from across the
     // room on a TV; HiDPI buffers (dpr 2-3 on 4K) blow up memory and
-    // per-frame drawImage cost for zero perceptible gain.
+    // per-frame redraw cost for zero perceptible gain.
     const dpr = Math.min(window.devicePixelRatio || 1, 1);
     for (const s of stages) {
-      const { canvas, ctx, staticCanvas, staticCtx } = s;
+      const { canvas, ctx } = s;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       canvas.width  = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      staticCanvas.width  = canvas.width;
-      staticCanvas.height = canvas.height;
-      staticCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawStaticGlobe(s);
     }
   }
 
-  function drawStaticGlobe({ stage, canvas, staticCtx: ctx, bloopSites }) {
+  function drawGlobe({ stage, canvas, ctx }) {
     const T = themeFor(canvas);
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
@@ -2196,35 +2189,28 @@
         ctx.stroke();
       });
 
-    // Cache bloop positions for the per-frame overlay (Austin idx 0,
-    // Miami idx 4). Skipped here — drawn live in tick() over the
-    // blitted static cache.
-    bloopSites.length = 0;
-    for (const idx of [0, 4]) {
-      const site = projected[idx];
-      if (site && site.v.z > 0) bloopSites.push({ x: site.p.x, y: site.p.y });
-    }
-    // Cache pixel scale + theme pulse color for the bloop overlay.
-    stage.__bloopPx = px;
-    stage.__bloopPulse = T.pulse;
   }
 
-  // Final-frame copy: blit the static cache to the main canvas once
-  // and stop. No per-frame canvas work whatsoever. The radar bloops
-  // on Austin + Miami are deferred to a CSS overlay below (cheap
-  // GPU-composited keyframes instead of canvas redraws).
-  function paintOnce(s) {
-    const { canvas, ctx, staticCanvas } = s;
-    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-    ctx.drawImage(staticCanvas, 0, 0, canvas.clientWidth, canvas.clientHeight);
+  // 10fps redraw tick — globe re-renders six times per second instead of
+  // sixty. Pause the redraw when Page 1 is off-screen (translateX moves
+  // the tracker+globe panel out of view during the project-detail page),
+  // so the canvas is idle for the entire ~25s Page 2 hold.
+  const pagesTrack = document.getElementById('pages-track');
+  const TICK_MS = 100;
+  function tick() {
+    if (pagesTrack.classList.contains('page-1')) return;  // Page 1 off-screen
+    rotation -= SPIN_RATE * (TICK_MS / 1000);  // CCW drift
+    for (const s of stages) drawGlobe(s);
+  }
+
+  function paintAll() {
+    for (const s of stages) drawGlobe(s);
   }
 
   fitAll();
-  for (const s of stages) paintOnce(s);
-  window.addEventListener('resize', () => {
-    fitAll();
-    for (const s of stages) paintOnce(s);
-  });
+  paintAll();
+  window.addEventListener('resize', () => { fitAll(); paintAll(); });
+  setInterval(tick, TICK_MS);
 })();
 </script>
 </body>
