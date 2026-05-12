@@ -1909,8 +1909,7 @@
   const GRID_STEP  = 20;                   // 20° lat/lng grid
   const SCALE      = 0.56;                 // r = min(w,h) * 0.5 * SCALE
   const LINE_W     = 1;
-  const SPIN_RATE  = 0.05;                 // rad/sec — slow for streaming target
-  const TICK_MS    = 100;                  // 10fps redraw
+  const SPIN_RATE  = 0.05;                 // rad/sec
 
   let rotation = -0.047;
 
@@ -2129,19 +2128,25 @@
     });
   }
 
-  // 10fps tick — pauses when Page 1 is off-screen (translateX during
-  // the project-detail page hold).
+  // requestAnimationFrame tick at the display refresh rate (60Hz+).
+  // Pauses when Page 1 is off-screen (translateX during the
+  // project-detail page hold), so the canvas is idle for that ~25s.
   const pagesTrack = document.getElementById('pages-track');
-  function tick() {
-    if (pagesTrack.classList.contains('page-1')) return;
-    rotation -= SPIN_RATE * (TICK_MS / 1000);
-    draw();
+  let lastT = performance.now();
+  function tick(now) {
+    const dt = (now - lastT) / 1000;
+    lastT = now;
+    if (!pagesTrack.classList.contains('page-1')) {
+      rotation -= SPIN_RATE * dt;
+      draw();
+    }
+    requestAnimationFrame(tick);
   }
 
   fit();
   draw();
   window.addEventListener('resize', () => { fit(); draw(); });
-  setInterval(tick, TICK_MS);
+  requestAnimationFrame(tick);
 })();
 </script>
 </body>
