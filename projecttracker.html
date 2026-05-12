@@ -1031,6 +1031,13 @@
   .swim-grid.fill-active .swim-leading {
     animation: swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards;
   }
+  /* Completed rows (Mueller, CFV Tranche 1) — entrance + infinite
+     green ping so the done-state reads as alive. */
+  .swim-grid.fill-active .swim-row.complete .swim-leading {
+    animation:
+      swim-leading-in 400ms ease-out calc(var(--d, 0s) + 1s) forwards,
+      swim-leading-pulse 2s ease-out calc(var(--d, 0s) + 1.4s) infinite;
+  }
   @keyframes swim-line-fill {
     from { width: 0; }
     to   { width: var(--p, 0%); }
