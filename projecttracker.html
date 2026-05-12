@@ -5,7 +5,7 @@
 <title>ICON Project Tracker — Q1 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&family=Wix+Madefor+Display:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500&family=Geist:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* ICON Brand 2026 — D+B / PRIME sub-brand
      Neutral gray + orange (O50). Light mode = D+B (G90 surfaces),
@@ -64,11 +64,10 @@
     --status-risk: #f59e0b;    /* vivid amber — reads as yellow not brown */
     --status-off:  #ef4444;    /* vivid red */
 
-    /* §6 — Lightspeed is the canonical display; Wix Madefor Display is
-       the brand-approved production fallback. Lightspeed isn't loaded
-       from disk in this single-file deliverable, so display tier
-       resolves to Wix Madefor — same silhouette family. */
-    --display: 'Lightspeed', 'Wix Madefor Display', sans-serif;
+    /* §6 — Lightspeed is the canonical display; Geist is the fallback
+       when Lightspeed isn't loaded from disk (this single-file
+       deliverable doesn't ship the OTFs). */
+    --display: 'Lightspeed', 'Geist', sans-serif;
     --body:    'Helvetica Neue', 'Inter', sans-serif;
     --mono:    'Roboto Mono', 'Courier New', monospace;
   }
