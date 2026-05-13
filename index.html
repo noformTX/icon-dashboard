@@ -570,7 +570,8 @@
      vertically centered together per money-shot pattern ----- */
   .event-list {
     list-style: none;
-    flex: 1;
+    flex: 0 0 auto;
+    margin: auto 0;
     display: flex;
     flex-direction: row;
   }
@@ -578,7 +579,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 24px;
     min-width: 0;
   }
@@ -839,7 +840,7 @@
       <footer class="countdown-foot">
         <div class="countdown-caption">to Titan CFV Mobilization</div>
         <div class="countdown-target">
-          <strong>15 July 2026</strong>
+          <strong>15 August 2026</strong>
           Target Deploy
         </div>
       </footer>
@@ -962,7 +963,7 @@
   }
 
   function updateCountdowns() {
-    const cfvDays = daysUntil('2026-07-15');
+    const cfvDays = daysUntil('2026-08-15');
     document.getElementById('countdown-days').textContent = cfvDays;
   }
 
@@ -986,7 +987,7 @@
         { text: 'BuildOS Ecosystem launched and in use (Codex → Design → Plan → Build → Mission Control)', status: 'risk' },
         { text: 'Titan wall systems designed and validated', status: 'risk' },
         { text: 'Complete Titan handbooks: builder, structural engineering, architecture', status: 'on' },
-        { text: 'CODEX update launched in March 2026 with new home designs included', status: 'risk' },
+        { text: 'CODEX update launched in March 2026 with new home designs included', status: 'on' },
         { text: 'Titan business plan and financial model finalized', status: 'risk' },
         { text: 'Develop technology customer with contracts suite + related legal infrastructure', status: 'risk' }
       ]
@@ -996,7 +997,7 @@
       items: [
         { text: 'Set up Titan customer financing program', status: 'on' },
         { text: 'Set up 3D-printed home mortgage and insurance programs', status: 'on' },
-        { text: 'Titan Program launch during March (SXSW) 2026', status: 'risk' },
+        { text: 'Titan Program launch during March (SXSW) 2026', status: 'on' },
         { text: "Break ground on St. Mark's Church", status: 'risk' },
         { text: 'Break ground + complete market-rate model home on multi-story project (600 Kemp)', status: 'on' },
         { text: '100 Titan reservations with meaningful deposits', status: 'on' },
@@ -1019,7 +1020,7 @@
       items: [
         { text: 'Secure $50M+ total new contracts', status: 'risk' },
         { text: 'Implement business structure to perform as construction and technology prime', status: 'risk' },
-        { text: 'Launch dedicated website, branding and collateral to support sales effort (Q1)', status: 'risk' },
+        { text: 'Launch dedicated website, branding and collateral to support sales effort (Q1)', status: 'on' },
         { text: 'Establish secure IT / software infrastructure environment', status: 'risk' },
         { text: 'Deliver Vulcan Prime to ERDC / USACE', status: 'on' },
         { text: 'CODEX Prime — 1 standardized design adopted by USACE', status: 'on' }
@@ -1089,8 +1090,8 @@
   // Status uses chip vocabulary per §6.9
   // ============================================
   const kpis = [
-    { metric: 'Titan Reservations',   goal: '100',         actual: '63',                              type: 'num',   status: 'risk' },
-    { metric: 'Cost per Cubic Yard',  goal: '$274/cy',     actual: '$317 (MAR)',                      type: 'num',   status: 'risk' },
+    { metric: 'Titan Reservations',   goal: '100',         actual: '63',                              type: 'num',   status: 'on'   },
+    { metric: 'Cost per Cubic Yard',  goal: '$274/cy',     actual: '$317 (MAR)',                      type: 'num',   status: 'on'   },
     { metric: 'Print Cost per LF · SF', goal: '$200/LF · $37/SF', actual: '$207, $253/LF · $27, $33/SF', type: 'multi', status: 'off' },
     { metric: 'Print Performance',    goal: '40% OEE',     actual: '25% OEE',                         type: 'num',   status: 'risk' },
     { metric: 'Revenue',              goal: '$100M',       actual: '$22.2M',                          type: 'num',   status: 'on'   },
@@ -1122,8 +1123,8 @@
   // EVENTS
   // ============================================
   const events = [
-    { month: 'May',  day: '08', year: 2026, name: 'Heroes Welcome',      highlight: false },
-    { month: 'July', day: '15', year: 2026, name: 'Titan Deploy → CFV',  highlight: false }
+    { month: 'June',   day: '05', year: 2026, name: 'First Friday',           highlight: false },
+    { month: 'August', day: '15', year: 2026, name: 'Titan Deployment → CFV', highlight: false }
   ];
 
   function renderEvents() {
@@ -1192,9 +1193,9 @@
     { num: '118', label: 'Homes Sold' },
     { num: '342', label: 'People Housed' },
     { num: '230', label: 'Structures Built' },
-    { num: '464', label: 'Active Personnel' },
-    { num: '10',  label: 'Deployed Printers' },
-    { num: '12',  label: 'Active Job Sites' }
+    { num: '333', label: 'Active Personnel' },
+    { num: '0',   label: 'Deployed Printers' },
+    { num: '1',   label: 'Active Construction Site' }
   ];
 
   function renderTicker() {
