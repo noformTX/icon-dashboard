@@ -2321,10 +2321,34 @@
     requestAnimationFrame(tick);
   }
 
+  // Re-fit the canvas + redraw whenever the stage's box actually changes
+  // dimensions. This is the safety net for the production deploy: if the
+  // initial fit() runs before the dashboard layout settles (font load,
+  // auto-scaler ordering, slow TV browser), clientWidth/clientHeight can
+  // be 0 and the canvas would stay 0-sized — labels would still render
+  // (they're plain DOM) but the globe never draws. ResizeObserver fires
+  // as soon as the stage gets non-zero dimensions and recovers it.
+  let lastFitKey = '';
+  function refit() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (w <= 0 || h <= 0) return;
+    const key = `${w}×${h}`;
+    if (key === lastFitKey) return;
+    lastFitKey = key;
+    fit();
+    rebuildStars();
+    draw(performance.now());
+  }
   fit();
   rebuildStars();
   draw(performance.now());
-  window.addEventListener('resize', () => { fit(); rebuildStars(); draw(performance.now()); });
+  if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+    lastFitKey = `${canvas.clientWidth}×${canvas.clientHeight}`;
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(refit).observe(stageEl);
+  }
+  window.addEventListener('resize', refit);
   requestAnimationFrame(tick);
 })();
 </script>
