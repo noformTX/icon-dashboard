@@ -849,72 +849,6 @@
   .globe-stage .label-col-r .label { text-align: right; }
   .globe-stage .label.is-back { opacity: 0.28; }
 
-  /* HUD chrome — bottom-left coord readout, bottom-right scale bar,
-     corner brackets. Top brackets render faint (per design's final
-     iteration). All overlay above the canvas. */
-  .globe-stage .hud-block {
-    position: absolute;
-    font-family: var(--mono);
-    font-size: 9px;
-    line-height: 1.5;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: rgba(214,214,214,0.55);
-    pointer-events: none;
-    z-index: 4;
-  }
-  .globe-stage .hud-block .v {
-    color: #fff;
-    letter-spacing: 0.12em;
-  }
-  .globe-stage .hud-bl { bottom: 14px; left: 16px; }
-
-  .globe-stage .bracket {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border: 1px solid rgba(255,255,255,0.32);
-    z-index: 4;
-    pointer-events: none;
-  }
-  .globe-stage .bracket.bl { bottom: 6px; left: 6px;   border-right: 0; border-top: 0;    width: 12px; height: 12px; }
-  .globe-stage .bracket.br { bottom: 6px; right: 6px;  border-left: 0;  border-top: 0;    width: 12px; height: 12px; }
-  .globe-stage .bracket.tl { top: 6px;    left: 6px;   border-right: 0; border-bottom: 0; opacity: 0.4; }
-  .globe-stage .bracket.tr { top: 6px;    right: 6px;  border-left: 0;  border-bottom: 0; opacity: 0.4; }
-
-  .globe-stage .scale-readout {
-    position: absolute;
-    right: 16px;
-    bottom: 14px;
-    width: 120px;
-    font-family: var(--mono);
-    font-size: 8px;
-    letter-spacing: 0.14em;
-    color: rgba(214,214,214,0.55);
-    text-transform: uppercase;
-    text-align: right;
-    pointer-events: none;
-    z-index: 4;
-  }
-  .globe-stage .scale-readout .bar {
-    position: relative;
-    height: 5px;
-    margin-bottom: 4px;
-    margin-left: auto;
-    width: 100%;
-    border-left: 1px solid rgba(255,255,255,0.32);
-    border-right: 1px solid rgba(255,255,255,0.32);
-    border-bottom: 1px solid rgba(255,255,255,0.32);
-  }
-  .globe-stage .scale-readout .bar::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 1px;
-    height: 3px;
-    background: rgba(255,255,255,0.32);
-  }
 
   /* Zone clocks — 4 small clocks at the bottom margin of the globe panel.
      Each clock represents a US time zone where ICON has print activity. */
@@ -1306,14 +1240,6 @@
         <div class="label-cols" id="globe-labels">
           <div class="label-col label-col-l" data-side="left"></div>
           <div class="label-col label-col-r" data-side="right"></div>
-        </div>
-        <div class="hud-block hud-bl">
-          <div>LAT <span class="v" id="globe-lat-readout">—</span></div>
-          <div>LNG <span class="v" id="globe-lng-readout">—</span></div>
-        </div>
-        <div class="scale-readout">
-          <div class="bar"></div>
-          <div>SECTOR · GLOBAL</div>
         </div>
       </div>
       <div class="zone-clocks" id="zone-clocks"></div>
@@ -2276,6 +2202,12 @@
   // Bezier leader curves anchored at the city line's vertical center
   function drawLabels(M) {
     const stageRect = stageEl.getBoundingClientRect();
+    // The dashboard root applies CSS `transform: scale(s)` to fit the
+    // viewport, so getBoundingClientRect returns post-transform viewport
+    // pixels while the canvas draws in pre-transform layout pixels.
+    // Convert by the visual/layout width ratio.
+    const sx_ratio = stageRect.width  / (stageEl.clientWidth  || 1);
+    const sy_ratio = stageRect.height / (stageEl.clientHeight || 1);
     for (let i = 0; i < labelEls.length; i++) {
       const { el, idx, side } = labelEls[i];
       const [, lat, lng] = SITES[idx];
@@ -2287,9 +2219,17 @@
       const onFront = v.z > 0;
       el.classList.toggle('is-back', !onFront);
 
-      const cityR = el.querySelector('.city').getBoundingClientRect();
-      const ax = (side === 'left' ? cityR.right + 2 : cityR.left - 2) - stageRect.left;
-      const ay = cityR.top + cityR.height / 2 - stageRect.top;
+      // `.city` is display:block so its element rect stretches to the wider
+      // coord line below it. Use a Range over the text node to get the
+      // actual glyph bbox of the city name itself.
+      const cityEl = el.querySelector('.city');
+      const range = document.createRange();
+      range.selectNodeContents(cityEl);
+      const cityR = range.getBoundingClientRect();
+      const edgeViewport = side === 'left' ? cityR.right : cityR.left;
+      const edgeLayout   = (edgeViewport - stageRect.left) / sx_ratio;
+      const ax = side === 'left' ? edgeLayout + 2 : edgeLayout - 2;
+      const ay = ((cityR.top + cityR.height / 2) - stageRect.top) / sy_ratio;
 
       const dx = sx - ax;
       const dy = sy - ay;
@@ -2367,16 +2307,6 @@
     drawSites(now / 1000, M);
     drawLabels(M);
   }
-
-  function updateReadout() {
-    const lng = ((-rotation * 180 / Math.PI) + 540) % 360 - 180;
-    const lat = Math.sin(performance.now() / 4000) * 30;
-    const e1 = document.getElementById('globe-lat-readout');
-    const e2 = document.getElementById('globe-lng-readout');
-    if (e1) e1.textContent = lat >= 0 ? `${lat.toFixed(2)}°N` : `${(-lat).toFixed(2)}°S`;
-    if (e2) e2.textContent = lng >= 0 ? `${lng.toFixed(2)}°E` : `${(-lng).toFixed(2)}°W`;
-  }
-  setInterval(updateReadout, 80);
 
   // Tick — pause while Page 1 is off-screen
   const pagesTrack = document.getElementById('pages-track');
