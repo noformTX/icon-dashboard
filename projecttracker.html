@@ -2261,6 +2261,10 @@
 
   function draw(now) {
     const M = metrics();
+    // Bail out if the stage is degenerate. Without this, drawLimb passes
+    // M.r1 - 1 (= -1 when r1 is 0) into ctx.arc and the entire frame
+    // throws. OptiSigns hit this; Netlify did not.
+    if (M.r1 < 1 || M.w < 2 || M.h < 2) return;
     ctx.clearRect(0, 0, M.w, M.h);
 
     drawStars(now / 1000);
@@ -2321,25 +2325,6 @@
     requestAnimationFrame(tick);
   }
 
-  // ── TEMPORARY DIAGNOSTIC OVERLAY ───────────────────────
-  // Reads out canvas state + any thrown error inline on the panel so
-  // production behavior can be debugged without opening dev tools on
-  // the TV. Remove once the production rendering bug is resolved.
-  const dbgEl = document.createElement('div');
-  dbgEl.style.cssText = 'position:absolute;top:8px;left:8px;z-index:10;font:11px/1.4 ui-monospace,Menlo,monospace;color:#FF4F00;background:rgba(0,0,0,0.6);padding:6px 8px;pointer-events:none;white-space:pre;';
-  stageEl.appendChild(dbgEl);
-  let __lastErr = '';
-  let __frames = 0;
-  function dbg() {
-    const dpr = window.devicePixelRatio || 1;
-    dbgEl.textContent =
-      `stage ${stageEl.clientWidth}×${stageEl.clientHeight}\n` +
-      `canvas ${canvas.clientWidth}×${canvas.clientHeight}  buf ${canvas.width}×${canvas.height}\n` +
-      `dpr ${dpr}  pageCls ${pagesTrack?.className}\n` +
-      `frames ${__frames}  err: ${__lastErr || '—'}`;
-  }
-  setInterval(dbg, 500);
-
   // Re-fit the canvas + redraw whenever the stage's box actually changes
   // dimensions. Safety net for the production deploy: if the initial fit()
   // runs before layout settles (font load, auto-scaler ordering, slow TV
@@ -2354,23 +2339,10 @@
     const key = `${w}×${h}`;
     if (key === lastFitKey) return;
     lastFitKey = key;
-    try { fit(); rebuildStars(); draw(performance.now()); }
-    catch (e) { __lastErr = e.message; }
+    fit();
+    rebuildStars();
+    draw(performance.now());
   }
-
-  // Wrap tick body in try/catch so we can read errors back on the TV
-  // panel. Also draw a guaranteed-visible 12×12 orange test square at
-  // canvas (0,0) — if you see the square but no globe, draw logic is
-  // the bug; if you don't see it, the canvas itself isn't painting.
-  const _draw = draw;
-  draw = function(now) {
-    try {
-      _draw(now);
-      ctx.fillStyle = '#FF4F00';
-      ctx.fillRect(0, 0, 12, 12);
-      __frames++;
-    } catch (e) { __lastErr = e.message; }
-  };
 
   fit();
   rebuildStars();
