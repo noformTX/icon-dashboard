@@ -10,7 +10,7 @@
   /* ICON Brand 2026 — D+B / PRIME sub-brand
      Neutral gray + orange (O50). Light mode = D+B (G90 surfaces),
      dark mode = PRIME (G10 body). Theme auto-switches at noon/midnight;
-     manual toggle in header chrome. See ICON-BRAND.md §1, §2. */
+     manual toggle in header chrome. See icon-brand skill §1, §2. */
   :root {
     /* Gray palette — D+B/PRIME SURFACES ONLY (HSL %L stepped, neutral) */
     --g10: #1a1a1a;
@@ -93,6 +93,9 @@
     --rule-interior: rgba(255, 255, 255, 0.18);
     --rule-chrome:   rgba(255, 255, 255, 0.12);
     --surface-tint:  rgba(255, 255, 255, 0.05);
+
+    /* Accent override — orange → white for this surface. */
+    --accent: #ffffff;
 
     /* Status text — semantic, brightened for dark surface AA.
        Resolved on G10: green ~9.5:1, amber ~11.5:1, red ~5.7:1. */
@@ -211,7 +214,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 48px;
-    border-bottom: 1px solid var(--rule-chrome);
   }
   .h-left { display: flex; align-items: center; gap: 24px; }
 
@@ -251,13 +253,13 @@
     font-family: var(--mono);
     font-size: 12px;
     letter-spacing: 0.05em;
-    color: var(--accent);
+    color: var(--status-on);
     text-transform: uppercase;
   }
   .live-dot {
     width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--status-on);
     animation: pulse 2s ease-in-out infinite;
   }
   @keyframes pulse {
@@ -291,10 +293,10 @@
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 800px 1fr 1fr;
+    grid-template-columns: 3fr 1fr 1fr;
     grid-template-rows: 5fr 4fr;
-    gap: 24px;
-    padding: 32px 48px;
+    gap: 32px;
+    padding: 48px;
     min-height: 0;
   }
 
@@ -314,15 +316,17 @@
   .countdown-body {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 32px;
+    justify-content: center;
+    gap: 16px;
     min-height: 0;
   }
 
   .countdown-num {
     font-family: var(--display);
     font-size: 256px;
-    font-weight: 800;        /* §6.1 Display Heavy */
+    font-weight: 500;        /* §6.1 Display Medium */
     line-height: 0.84;
     color: var(--text);
     letter-spacing: -0.04em; /* §6.1 Display tier tracking */
@@ -330,76 +334,12 @@
   }
 
   .countdown-unit {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 28px;
-    font-weight: 400;
-    color: var(--accent);
-  }
-
-  /* Analog clock — minimal, panel-surface (no dial face); ambient, not focal */
-  .clock {
-    margin-left: auto;
-    width: 192px;
-    height: 192px;
-    flex-shrink: 0;
-  }
-  .clock-tick {
-    stroke: var(--text-subtle);
-    stroke-width: 1;
-  }
-  .clock-tick.cardinal {
-    stroke: var(--text-muted);
-    stroke-width: 1.5;
-  }
-  .hand {
-    stroke: var(--text-muted);
-    stroke-linecap: round;
-  }
-  .hand.hour    { stroke-width: 3; }
-  .hand.minute  { stroke-width: 2; }
-  .hand.second  { stroke-width: 1; stroke: var(--accent); }
-  .clock-pivot { fill: var(--text-muted); }
-
-  /* Clock face — transparent by default, white in day mode for contrast
-     against the G95 page surface. Both the main countdown clock and the
-     zone clocks sit on transparent panels, so they need the disc fill. */
-  .clock-face { fill: transparent; }
-  body:not(.dark) .clock-face { fill: #ffffff; }
-
-  .countdown-foot {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding-top: 24px;
-    border-top: 1px solid var(--rule-interior);
-    margin-top: 24px;
-  }
-  .countdown-caption {
     font-family: var(--display);
-    font-size: 24px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.3;
-    flex: 1;
-  }
-  .countdown-target {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.05em;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
     color: var(--text-muted);
-    text-transform: uppercase;
-    text-align: right;
-    line-height: 1.6;
-    flex-shrink: 0;
-  }
-  .countdown-target strong {
-    display: block;
-    color: var(--text);
-    font-weight: 400;            /* §6.7 mono regular */
-    font-size: 14px;
-    letter-spacing: 0.05em;
+    white-space: nowrap;
   }
 
   /* ============================================
@@ -412,8 +352,9 @@
     gap: 8px;
   }
   .okr-pagination .dot {
-    width: 32px;
-    height: 3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     background: var(--rule-interior);
     transition: background 400ms ease;
   }
@@ -430,8 +371,8 @@
 
   .okr-title {
     font-family: var(--display);
-    font-size: 40px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 600;
     line-height: 1.1;
     color: var(--text);
     letter-spacing: -0.02em;  /* §6.1 Heading tier */
@@ -450,17 +391,25 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    border-bottom: 1px solid var(--rule-interior);
+    border-bottom: 1px solid #1a1a1a;
     flex: 1;
     min-height: 0;
-    padding: 0 8px;
+    padding: 8px 16px;
   }
   .okr-item:last-child { border-bottom: none; }
+
+  /* Monochromatic status tinting — entire row reads as one status zone */
+  .okr-item.status-on   { background: rgba(74, 222, 128, 0.10); }
+  .okr-item.status-risk { background: rgba(250, 204, 21, 0.10); }
+  .okr-item.status-off  { background: rgba(239, 68, 68,  0.10); }
+  .okr-item.status-on   .okr-text { color: var(--status-on);   }
+  .okr-item.status-risk .okr-text { color: var(--status-risk); }
+  .okr-item.status-off  .okr-text { color: var(--status-off);  }
 
   .okr-text {
     flex: 1;
     font-family: var(--body);
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1.35;
     color: var(--text);
     overflow: hidden;
@@ -477,7 +426,7 @@
      KPI TRACKER
      8px uniform padding on th/td (--sp1; 8-mult; satisfies §6.8 "uniform" rule)
      ============================================ */
-  .kpi { grid-column: 1; grid-row: 2; }
+  .kpi { grid-column: 2 / span 2; grid-row: 2; }
 
   .kpi-table {
     width: 100%;
@@ -501,8 +450,8 @@
     text-transform: uppercase;
     color: var(--text-muted);
     text-align: left;
-    padding: 4px 8px;
-    background: var(--surface-tint);
+    padding: 4px 16px;
+    background: transparent;
     font-weight: 400;
     /* §6.8: column headers use surface tint, no border-bottom.
        Vertical padding tightened from 8 to 4 — horizontal stays at 8
@@ -512,13 +461,35 @@
   .kpi-table td.right { text-align: right; }
 
   .kpi-table td {
-    padding: 8px;
-    border-bottom: 1px solid var(--rule-interior);
+    padding: 8px 16px;
+    border-bottom: 1px solid #1a1a1a;
     font-size: 14px;
     line-height: 1.15;
     vertical-align: middle;
   }
   .kpi-table tr:last-child td { border-bottom: none; }
+
+  /* Monochromatic status tinting — entire row reads as one status zone */
+  .kpi-table tr.status-on   { background: rgba(74, 222, 128, 0.10); }
+  .kpi-table tr.status-risk { background: rgba(250, 204, 21, 0.10); }
+  .kpi-table tr.status-off  { background: rgba(239, 68, 68,  0.10); }
+  .kpi-table tr.status-on   .metric,
+  .kpi-table tr.status-on   .num,
+  .kpi-table tr.status-on   .multi { color: var(--status-on);   }
+  .kpi-table tr.status-risk .metric,
+  .kpi-table tr.status-risk .num,
+  .kpi-table tr.status-risk .multi { color: var(--status-risk); }
+  .kpi-table tr.status-off  .metric,
+  .kpi-table tr.status-off  .num,
+  .kpi-table tr.status-off  .multi { color: var(--status-off);  }
+
+  /* Goal column dimmed inside tinted rows — preserves goal/actual hierarchy */
+  .kpi-table tr.status-on   .num.goal,
+  .kpi-table tr.status-on   .multi.goal,
+  .kpi-table tr.status-risk .num.goal,
+  .kpi-table tr.status-risk .multi.goal,
+  .kpi-table tr.status-off  .num.goal,
+  .kpi-table tr.status-off  .multi.goal { opacity: 0.65; }
 
   /* Metric column: body type — proper names per §6.7 */
   .kpi-table .metric {
@@ -563,8 +534,19 @@
      EVENTS (col 2 row 2) + IMAGERY (col 3 row 2)
      Two real cells side by side, each with its own panel surface.
      ============================================ */
-  .events  { grid-column: 2; grid-row: 2; }
-  .imagery { grid-column: 3; grid-row: 2; }
+  .row2-left {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    gap: 32px;
+    min-height: 0;
+  }
+  .events,
+  .imagery {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
 
   /* ----- Events: horizontal layout (date column | info column),
      vertically centered together per money-shot pattern ----- */
@@ -573,15 +555,17 @@
     flex: 0 0 auto;
     margin: auto 0;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
   }
   .event {
-    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 24px;
+    padding: 24px 16px;
     min-width: 0;
+  }
+  .event + .event {
+    border-top: 1px solid var(--rule-interior);
   }
 
   .event-date {
@@ -627,8 +611,9 @@
     gap: 8px;
   }
   .slide-pagination .dot {
-    width: 32px;
-    height: 3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
     background: var(--rule-interior);
     transition: background 400ms ease;
   }
@@ -677,14 +662,14 @@
      CELL — shared panel chrome (heading row, eyebrow, meta).
      ============================================ */
   .cell {
-    background: var(--bg-panel);
-    padding: 24px;
+    background: transparent;
+    padding: 0;
     display: flex;
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
     position: relative;
-    border-radius: 6px;
+    border-radius: 0;
   }
   .cell-head {
     display: flex;
@@ -721,7 +706,7 @@
     display: flex;
     align-items: stretch;
     overflow: hidden;
-    margin: 0 48px 32px;
+    margin: 0;
   }
   .ticker-window {
     flex: 1;
@@ -802,7 +787,7 @@
     <div class="h-left">
       <div class="icon-wordmark" id="wordmark"></div>
       <div class="header-meta">
-        <span class="eyebrow">Dashboard · Q1 2026</span>
+        <span class="eyebrow">Dashboard / Q1 2026</span>
       </div>
     </div>
     <div class="h-right">
@@ -824,26 +809,17 @@
     <section class="cell countdown">
       <header class="cell-head">
         <span class="cell-eyebrow">Countdown</span>
+        <span class="cell-meta">15 August 2026 — Target Deploy</span>
       </header>
       <div class="countdown-body">
         <div class="countdown-num" id="countdown-days">—</div>
-        <div class="countdown-unit">Days</div>
-        <svg class="clock" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle class="clock-face" cx="100" cy="100" r="78" />
-          <g class="clock-ticks"></g>
-          <line class="hand hour" x1="100" y1="100" x2="100" y2="55" />
-          <line class="hand minute" x1="100" y1="100" x2="100" y2="32" />
-          <line class="hand second" x1="100" y1="115" x2="100" y2="20" />
-          <circle class="clock-pivot" cx="100" cy="100" r="2" />
-        </svg>
+        <div class="countdown-unit">Days to Titan CFV Mobilization</div>
       </div>
-      <footer class="countdown-foot">
-        <div class="countdown-caption">to Titan CFV Mobilization</div>
-        <div class="countdown-target">
-          <strong>15 August 2026</strong>
-          Target Deploy
+      <div class="ticker">
+        <div class="ticker-window">
+          <div class="ticker-track" id="ticker-track"></div>
         </div>
-      </footer>
+      </div>
     </section>
 
     <!-- OKR SCROLLER -->
@@ -863,21 +839,21 @@
       </header>
       <table class="kpi-table">
         <colgroup>
-          <col><col><col><col>
+          <col><col><col>
         </colgroup>
         <thead>
           <tr>
             <th>Metric</th>
             <th>Goal</th>
             <th>Actual</th>
-            <th class="right">Status</th>
           </tr>
         </thead>
         <tbody id="kpi-body"></tbody>
       </table>
     </section>
 
-    <!-- UPCOMING EVENTS -->
+    <!-- UPCOMING EVENTS + FIELD IMAGERY (col 1) -->
+    <div class="row2-left">
     <section class="cell events">
       <header class="cell-head">
         <span class="cell-eyebrow">Upcoming</span>
@@ -892,15 +868,9 @@
       </header>
       <div class="slide-body" id="slide-body"></div>
     </section>
+    </div>
 
   </main>
-
-  <!-- ===================== TICKER ===================== -->
-  <div class="ticker">
-    <div class="ticker-window">
-      <div class="ticker-track" id="ticker-track"></div>
-    </div>
-  </div>
 
 </div>
 
@@ -921,7 +891,7 @@
   window.addEventListener('resize', fitDashboard);
 
   // ============================================
-  // ICON Wordmark — paths from ICON-BRAND.md §1
+  // ICON Wordmark — paths from icon-brand skill §1
   // ============================================
   const wordmarkSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 425.19" aria-label="ICON">
     <g fill="currentColor">
@@ -1055,10 +1025,8 @@
           ${sortedItems.map(it => {
             const s = statusFor[it.status];
             return `
-              <li class="okr-item">
-                <span class="status-dot ${s.cls}"></span>
+              <li class="okr-item status-${s.cls}">
                 <div class="okr-text">${it.text}</div>
-                <span class="status-label ${s.cls}">${s.label}</span>
               </li>
             `;
           }).join('')}
@@ -1092,7 +1060,7 @@
   const kpis = [
     { metric: 'Titan Reservations',   goal: '100',         actual: '63',                              type: 'num',   status: 'on'   },
     { metric: 'Cost per Cubic Yard',  goal: '$274/cy',     actual: '$317 (MAR)',                      type: 'num',   status: 'on'   },
-    { metric: 'Print Cost per LF · SF', goal: '$200/LF · $37/SF', actual: '$207, $253/LF · $27, $33/SF', type: 'multi', status: 'off' },
+    { metric: 'Print Cost per LF / SF', goal: '$200/LF<br>$37/SF', actual: '$207, $253/LF<br>$27, $33/SF', type: 'multi', status: 'off' },
     { metric: 'Print Performance',    goal: '40% OEE',     actual: '25% OEE',                         type: 'num',   status: 'risk' },
     { metric: 'Revenue',              goal: '$100M',       actual: '$22.2M',                          type: 'num',   status: 'on'   },
     { metric: 'Gross Margin',         goal: '20%',         actual: '22%',                             type: 'num',   status: 'on'   },
@@ -1109,11 +1077,10 @@
     body.innerHTML = sorted.map(k => {
       const s = statusFor[k.status];
       return `
-        <tr>
-          <td class="metric"><span class="status-dot ${s.cls}"></span><span>${k.metric}</span></td>
+        <tr class="status-${s.cls}">
+          <td class="metric"><span>${k.metric}</span></td>
           <td class="${k.type} goal">${k.goal}</td>
           <td class="${k.type}">${k.actual}</td>
-          <td class="right"><span class="status-label mini ${s.cls}">${s.label}</span></td>
         </tr>
       `;
     }).join('');
@@ -1228,41 +1195,6 @@
 
   document.body.classList.add('dark');
 
-  // ============================================
-  // ANALOG CLOCK — countdown panel only (single clock).
-  // ============================================
-  (function buildClockTicks() {
-    document.querySelectorAll('.clock-ticks').forEach(g => {
-      let html = '';
-      for (let i = 0; i < 12; i++) {
-        const angle = (i * 30 - 90) * Math.PI / 180;
-        const isCardinal = i % 3 === 0;
-        const inner = isCardinal ? 82 : 88;
-        const outer = 96;
-        const x1 = (100 + inner * Math.cos(angle)).toFixed(2);
-        const y1 = (100 + inner * Math.sin(angle)).toFixed(2);
-        const x2 = (100 + outer * Math.cos(angle)).toFixed(2);
-        const y2 = (100 + outer * Math.sin(angle)).toFixed(2);
-        html += `<line class="clock-tick${isCardinal ? ' cardinal' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`;
-      }
-      g.innerHTML = html;
-    });
-  })();
-
-  const mainClock = document.querySelector('.countdown-body .clock');
-  function tickClock() {
-    if (mainClock) {
-      const now = new Date();
-      const s = now.getSeconds() + now.getMilliseconds() / 1000;
-      const m = now.getMinutes() + s / 60;
-      const h = (now.getHours() % 12) + m / 60;
-      mainClock.querySelector('.hand.hour').setAttribute('transform',   `rotate(${h * 30} 100 100)`);
-      mainClock.querySelector('.hand.minute').setAttribute('transform', `rotate(${m * 6} 100 100)`);
-      mainClock.querySelector('.hand.second').setAttribute('transform', `rotate(${s * 6} 100 100)`);
-    }
-    requestAnimationFrame(tickClock);
-  }
-  requestAnimationFrame(tickClock);
 </script>
 </body>
 </html>
